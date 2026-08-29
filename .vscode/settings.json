@@ -1,0 +1,41 @@
+{
+  // ===== Python 环境（Anaconda / conda）=====
+  // 项目使用 conda 环境 llm_env（位于 /home/dzxu/anaconda3/envs/llm_env）
+  // 已含 torch 2.11.0 / numpy / imageio / scipy / tqdm / pillow
+  "python.defaultInterpreterPath": "/home/dzxu/anaconda3/envs/llm_env/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.terminal.activateEnvInCurrentTerminal": true,
+  "python.analysis.extraPaths": ["${workspaceFolder}/nerf/code"],
+  "python.analysis.typeCheckingMode": "basic",
+
+  // ===== 测试 =====
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["nerf/code/tests"],
+  "python.testing.cwd": "${workspaceFolder}",
+
+  // ===== 终端 =====
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "terminal.integrated.env.linux": {
+    "PYTHONPATH": "${workspaceFolder}/nerf/code"
+  },
+
+  // ===== 代码质量 =====
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "[python]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.rulers": [88]
+  },
+
+  // ===== 资源目录（默认折叠/隐藏，避免干扰浏览）=====
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/.pytest_cache": true,
+    "**/.venv": true,
+    "**/*.pyc": true
+  },
+  "search.exclude": {
+    "nerf/paper/latex/figs/**": true
+  }
+}

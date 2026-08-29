@@ -1,0 +1,55 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "NeRF: 运行核心测试",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} tests/test_core.py",
+      "options": {
+        "cwd": "${workspaceFolder}/nerf/code"
+      },
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "NeRF: 训练 (tiny 冒烟)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_smoke --tiny",
+      "options": {
+        "cwd": "${workspaceFolder}/nerf/code"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "NeRF: 训练 (全量 200k 步)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_full --steps 200000",
+      "options": {
+        "cwd": "${workspaceFolder}/nerf/code"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "NeRF: 测试 (PSNR/SSIM)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode test --exp lego_full --ckpt logs/lego_full/latest.pt",
+      "options": {
+        "cwd": "${workspaceFolder}/nerf/code"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "NeRF: 渲染相机轨迹视频帧",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode render --exp lego_full --ckpt logs/lego_full/latest.pt --frames 120",
+      "options": {
+        "cwd": "${workspaceFolder}/nerf/code"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

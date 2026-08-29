@@ -1,0 +1,75 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "NeRF: 训练 (tiny 冒烟)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "args": [
+        "--config", "data/lego",
+        "--mode", "train",
+        "--exp", "lego_smoke",
+        "--tiny"
+      ],
+      "cwd": "${workspaceFolder}/nerf/code",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "NeRF: 训练 (全量)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "args": [
+        "--config", "data/lego",
+        "--mode", "train",
+        "--exp", "lego_full",
+        "--steps", "200000"
+      ],
+      "cwd": "${workspaceFolder}/nerf/code",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "NeRF: 测试 (PSNR/SSIM)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "args": [
+        "--config", "data/lego",
+        "--mode", "test",
+        "--exp", "lego_full",
+        "--ckpt", "logs/lego_full/latest.pt"
+      ],
+      "cwd": "${workspaceFolder}/nerf/code",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "NeRF: 渲染相机轨迹",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "args": [
+        "--config", "data/lego",
+        "--mode", "render",
+        "--exp", "lego_full",
+        "--ckpt", "logs/lego_full/latest.pt",
+        "--frames", "120"
+      ],
+      "cwd": "${workspaceFolder}/nerf/code",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "Python: 当前文件",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+torch>=2.0
+numpy>=1.24
+Pillow>=9.0
+imageio>=2.25
+scipy>=1.10
+tqdm>=4.65
