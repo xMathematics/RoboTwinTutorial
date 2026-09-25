@@ -5,14 +5,14 @@
       "name": "NeRF: 训练 (tiny 冒烟)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
         "--config", "data/lego",
         "--mode", "train",
         "--exp", "lego_smoke",
         "--tiny"
       ],
-      "cwd": "${workspaceFolder}/nerf/code",
+      "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -20,14 +20,14 @@
       "name": "NeRF: 训练 (全量)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
         "--config", "data/lego",
         "--mode", "train",
         "--exp", "lego_full",
         "--steps", "200000"
       ],
-      "cwd": "${workspaceFolder}/nerf/code",
+      "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -35,14 +35,14 @@
       "name": "NeRF: 测试 (PSNR/SSIM)",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
         "--config", "data/lego",
         "--mode", "test",
         "--exp", "lego_full",
         "--ckpt", "logs/lego_full/latest.pt"
       ],
-      "cwd": "${workspaceFolder}/nerf/code",
+      "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
       "justMyCode": true
     },
@@ -50,7 +50,7 @@
       "name": "NeRF: 渲染相机轨迹",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/nerf/code/run_nerf.py",
+      "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
         "--config", "data/lego",
         "--mode", "render",
@@ -58,7 +58,7 @@
         "--ckpt", "logs/lego_full/latest.pt",
         "--frames", "120"
       ],
-      "cwd": "${workspaceFolder}/nerf/code",
+      "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
       "justMyCode": true
     },

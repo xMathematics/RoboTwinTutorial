@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath} tests/test_core.py",
       "options": {
-        "cwd": "${workspaceFolder}/nerf/code"
+        "cwd": "${workspaceFolder}/projects/nerf"
       },
       "group": {
         "kind": "test",
@@ -19,7 +19,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_smoke --tiny",
       "options": {
-        "cwd": "${workspaceFolder}/nerf/code"
+        "cwd": "${workspaceFolder}/projects/nerf"
       },
       "problemMatcher": []
     },
@@ -28,7 +28,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_full --steps 200000",
       "options": {
-        "cwd": "${workspaceFolder}/nerf/code"
+        "cwd": "${workspaceFolder}/projects/nerf"
       },
       "isBackground": true,
       "problemMatcher": []
@@ -38,7 +38,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode test --exp lego_full --ckpt logs/lego_full/latest.pt",
       "options": {
-        "cwd": "${workspaceFolder}/nerf/code"
+        "cwd": "${workspaceFolder}/projects/nerf"
       },
       "problemMatcher": []
     },
@@ -47,7 +47,7 @@
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode render --exp lego_full --ckpt logs/lego_full/latest.pt --frames 120",
       "options": {
-        "cwd": "${workspaceFolder}/nerf/code"
+        "cwd": "${workspaceFolder}/projects/nerf"
       },
       "problemMatcher": []
     }

@@ -7,6 +7,10 @@
 
 ## [Unreleased]
 
+### 变更
+- **项目重构**：按资源类型重新划分目录——`papers/`（论文库）、`tutorials/`（教程文档）、`projects/`（代码项目），原 `nerf/`、`robotwin/`、`slam/`、`3d_reconstruction/` 按主题拆分归入三类
+- 同步更新根 README、各索引 README、`.vscode/` 配置、`.gitignore` 及 CONSTRAINTS.md
+
 ### 新增
 - 全局约束文档 (CONSTRAINTS.md)
 - 变更日志 (CHANGELOG.md)
