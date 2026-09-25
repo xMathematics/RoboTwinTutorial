@@ -7,8 +7,8 @@ __pycache__/
 venv/
 
 # --- 训练产物 ---
-nerf/code/logs/
-nerf/code/data/
+projects/nerf/logs/
+projects/nerf/data/
 
 # --- 文档生成 ---
 docs/

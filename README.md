@@ -1,50 +1,56 @@
 # RoboTwinTutorial — 3D 视觉论文研读工作区
 
-本工作区以 **NeRF 论文精读**为主线，配套中文教程与最小 PyTorch 参考实现；同时保留了原有的 RoboTwin 2.0 学习资料（独立目录）。
+按 **论文（papers）/ 教程（tutorials）/ 项目（projects）** 三大类组织的研读工作区，
+当前主线为 **NeRF 论文精读**（论文源码 + 中文教程 + PyTorch 参考实现），
+并包含 RoboTwin 2.0、SLAM、3D 重建等主题的学习资料。
 
 ---
 
-## 📁 目录结构（已重构）
+## 📁 目录结构
 
 ```
 RoboTwinTutorial/
 ├── README.md               ← 本文件（总览）
-├── .vscode/                ← VS Code 配置（conda 环境 llm_env）
-│   ├── settings.json       ← Python 解释器 = llm_env
-│   ├── launch.json         ← 训练/测试/渲染 调试配置
-│   ├── tasks.json          ← 同名任务
-│   └── extensions.json     ← 推荐扩展
+├── CONSTRAINTS.md          ← 全局约束规范（文档/代码/提交规范）
+├── CHANGELOG.md            ← 变更日志
 │
-├── nerf/                   ★ NeRF 论文主线
-│   ├── README.md           NeRF 子项目总览
-│   ├── paper/latex/        论文 LaTeX 源码（原 latex/ 移入）
-│   │   └── arxiv_submission.tex  主文件
-│   ├── tutorial/           详细中文教程（10 章 + 导航）
-│   └── code/               最小可运行 PyTorch 参考实现
-│       ├── run_nerf.py     CLI 主入口
-│       ├── nerf/           核心模块（编码/模型/采样/渲染/数据/训练）
-│       ├── scripts/make_demo_data.py   演示数据生成
-│       └── tests/test_core.py          单元测试（8/8 通过）
+├── papers/                 ★ 论文库（按主题分目录）
+│   ├── README.md           论文索引
+│   ├── nerf/latex/         NeRF 论文 LaTeX 完整源码
+│   ├── robotwin/           RoboTwin 2.0 论文 PDF（arXiv:2506.18088）
+│   └── 3d_reconstruction/  3D 重建论文 arXiv 源码包（arXiv:2509.13414）
 │
-├── robotwin/               RoboTwin 2.0 学习资料（原 doc/ + paper/ 移入，独立保留）
-│   ├── tutorial/           原 10 章中文教程
-│   └── paper/              原论文 PDF（arXiv:2506.18088）
+├── tutorials/              ★ 教程文档（按主题分目录，中文）
+│   ├── README.md           教程总导航
+│   ├── nerf/               NeRF 10 章教程 + OVERVIEW 主题总览
+│   ├── robotwin/           RoboTwin 2.0 10 章教程
+│   ├── slam/               SLAM（规划中）
+│   └── 3d_reconstruction/  3D 重建（规划中）
 │
-└── documents/              通用文档（预留）
+├── projects/               ★ 代码项目（可运行参考实现）
+│   ├── README.md           项目索引与快速开始
+│   └── nerf/               NeRF PyTorch 教学版（8/8 单元测试通过）
+│
+├── scripts/                项目管理脚本（auto_commit.sh 自动提交）
+├── .github/workflows/      GitHub Actions（每周一 9:00 自动提交）
+└── .vscode/                VS Code 配置（conda 环境 llm_env，调试/任务）
 ```
 
 ---
 
-## 📖 论文分析（一句话）
+## 📖 主线：NeRF 论文
 
-`nerf/paper/latex/` 下的论文是计算机视觉里程碑之作：
-**《NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis》**
-（Mildenhall et al., ECCV 2020）。
+*NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis*（Mildenhall et al., ECCV 2020）。
 
 **核心创新**：把三维场景表示为连续的 **5D 神经辐射场**（MLP：位置+方向 → 颜色+密度），
 用**可微体积渲染**从一组带位姿的照片优化出新视角图像。三大关键技术：
 ① 位置编码（Eq.4）② 分层采样 + 层次采样（coarse/fine 双网络）③ 体积渲染积分（Eq.3）。
-完整解读见 [`nerf/tutorial/`](nerf/tutorial/README.md)。
+
+- 论文源码：[`papers/nerf/latex/`](papers/nerf/latex/arxiv_submission.tex)
+- 中文教程：[`tutorials/nerf/`](tutorials/nerf/README.md)（主题总览见 [OVERVIEW](tutorials/nerf/OVERVIEW.md)）
+- 参考实现：[`projects/nerf/`](projects/nerf/README.md)
+
+其他主题：[RoboTwin 2.0 教程](tutorials/robotwin/README.md) ｜ [SLAM](tutorials/slam/README.md) ｜ [3D 重建](tutorials/3d_reconstruction/README.md)
 
 ---
 
@@ -56,17 +62,17 @@ RoboTwinTutorial/
 
 ```bash
 conda activate llm_env
-pip install -r nerf/code/requirements.txt   # 缺什么装什么
+pip install -r projects/nerf/requirements.txt   # 缺什么装什么
 ```
 
 ### 2. 读教程
 
-从 [`nerf/tutorial/README.md`](nerf/tutorial/README.md) 开始，按 1→10 章顺序学习。
+从 [`tutorials/nerf/README.md`](tutorials/nerf/README.md) 开始，按 1→10 章顺序学习。
 
 ### 3. 跑代码（无需下载大数据集）
 
 ```bash
-cd nerf/code
+cd projects/nerf
 # ① 单元测试（8/8）
 python tests/test_core.py
 
@@ -85,139 +91,13 @@ python run_nerf.py --config data/demo_scene --mode render --exp demo_smoke --ckp
 
 ---
 
-## 🛠️ 重构说明
+## 📋 规范与自动化
 
-原结构问题：`doc/`（RoboTwin 教程）与 `latex/`（NeRF 论文）主题不一致、`code/` 与 `documents/` 为空。
-重构后按"项目主题"组织：NeRF 主线独立成 `nerf/`（论文/教程/代码三位一体），
-RoboTwin 内容完整保留于 `robotwin/`，并新增 `.vscode/` 环境配置与统一 README。
+- **开发规范**（文档/代码/提交/版本控制）：见 [CONSTRAINTS.md](CONSTRAINTS.md)
+- **本地自动提交**：`./scripts/auto_commit.sh`（用法见 [scripts/README.md](scripts/README.md)）
+- **GitHub Actions**：每周一 9:00 自动提交有变更的内容（`.github/workflows/auto-commit.yml`），也可在 Actions 页手动触发
+- **提交信息**：Conventional Commits 格式，如 `docs(nerf): 添加渲染方程章节`
 
----
+## 🤝 贡献
 
-## 📋 全局约束文档
-
-项目采用统一的开发规范，详细规范请参考 [`CONSTRAINTS.md`](CONSTRAINTS.md)：
-
-### 核心规范
-
-1. **文档规范**
-   - 使用中文撰写
-   - Markdown 格式规范
-   - 文件命名规范（`数字_标题.md`）
-
-2. **代码规范**
-   - 遵循 PEP 8
-   - 类型提示
-   - 代码注释
-
-3. **提交规范**
-   - Conventional Commits 格式
-   - 定期提交
-   - 分支管理
-
-4. **文档与代码分离**
-   - 文档和代码分开存储
-   - 文档侧重讲解原理
-   - 代码侧重实现细节
-
-### 版本控制
-
-项目使用语义化版本号：`MAJOR.MINOR.PATCH`
-
-- `MAJOR`: 不兼容的 API 修改
-- `MINOR`: 向下兼容的功能新增
-- `PATCH`: 向下兼容的问题修正
-
-变更记录请查看 [`CHANGELOG.md`](CHANGELOG.md)。
-
----
-
-## 🤖 自动化工具
-
-### 本地自动提交
-
-使用提供的脚本定期提交代码：
-
-```bash
-# 在项目根目录执行
-./scripts/auto_commit.sh
-```
-
-### GitHub Actions
-
-项目配置了 GitHub Actions 工作流，自动每周一上午 9 点提交代码。
-
-- **工作流文件**: `.github/workflows/auto-commit.yml`
-- **触发方式**: 定时任务 + 手动触发
-
-#### 手动触发
-
-在 GitHub 仓库页面：
-1. 进入 Actions 标签
-2. 选择 "定期提交代码" 工作流
-3. 点击 "Run workflow" 按钮
-4. 选择分支并运行
-
-#### 自定义提交频率
-
-编辑 `.github/workflows/auto-commit.yml` 文件中的 cron 表达式：
-
-```yaml
-schedule:
-  - cron: '0 9 * * 1'  # 每周一上午 9 点
-```
-
-cron 表达式格式：`分 时 日 月 周`
-
-常用示例：
-- `0 9 * * 1` - 每周一上午 9 点
-- `0 9 * * *` - 每天上午 9 点
-- `0 9 * * 1-5` - 每周一到周五上午 9 点
-- `0 9 1 * *` - 每月 1 号上午 9 点
-
----
-
-## 📊 项目结构（已重构）
-
-```
-RoboTwinTutorial/
-├── README.md               ← 本文件（总览）
-├── .vscode/                ← VS Code 配置（conda 环境 llm_env）
-│   ├── settings.json       ← Python 解释器 = llm_env
-│   ├── launch.json         ← 训练/测试/渲染 调试配置
-│   ├── tasks.json          ← 同名任务
-│   └── extensions.json     ← 推荐扩展
-│
-├── nerf/                   ★ NeRF 论文主线
-│   ├── README.md           NeRF 子项目总览
-│   ├── paper/latex/        论文 LaTeX 源码（原 latex/ 移入）
-│   │   └── arxiv_submission.tex  主文件
-│   ├── tutorial/           详细中文教程（10 章 + 导航）
-│   └── code/               最小可运行 PyTorch 参考实现
-│       ├── run_nerf.py     CLI 主入口
-│       ├── nerf/           核心模块（编码/模型/采样/渲染/数据/训练）
-│       ├── scripts/make_demo_data.py   演示数据生成
-│       └── tests/test_core.py          单元测试（8/8 通过）
-│
-├── robotwin/               RoboTwin 2.0 学习资料（原 doc/ + paper/ 移入，独立保留）
-│   ├── tutorial/           原 10 章中文教程
-│   └── paper/              原论文 PDF（arXiv:2506.18088）
-│
-├── slam/                   SLAM 模块
-│   └── tutorial/
-│
-├── 3d_reconstruction/     3D 重建模块
-│   └── tutorial/
-│
-├── documents/              通用文档（预留）
-│
-├── .github/                ← GitHub Actions 工作流
-│   └── workflows/
-│       └── auto-commit.yml  定期提交工作流
-│
-├── scripts/                ← 自动化脚本
-│   ├── auto_commit.sh      # 自动提交脚本
-│   └── README.md           # 脚本说明
-│
-├── CONSTRAINTS.md          # 全局约束文档
-└── CHANGELOG.md            # 变更日志
-```
+新增主题时三处联动：`papers/<主题>/`（论文）→ `tutorials/<主题>/`（教程）→ `projects/<主题>/`（可选代码），并更新三类索引 README。

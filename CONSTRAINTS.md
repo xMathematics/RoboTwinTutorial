@@ -9,22 +9,27 @@
 - **slam**: Simultaneous Localization and Mapping (SLAM) 教程
 - **3d_reconstruction**: 3D重建技术教程
 
-## 2. 分模块结构
+## 2. 项目分类结构
 
-每个模块遵循统一的目录结构：
+项目按资源类型分为三大类，每类内部按主题（nerf、robotwin、slam、3d_reconstruction）分子目录：
 
 ```
-module_name/
-├── README.md              # 模块概述
-├── tutorial/              # 教程文档
-│   ├── 01_*.md           # 章节文件，编号排序
-│   ├── 02_*.md
-│   ├── ...
-│   └── README.md         # 教程索引
-└── code/                  # 代码实现（可选）
-    ├── *.py
-    └── *.ipynb
+RoboTwinTutorial/
+├── papers/                 # 论文库：论文源码 / PDF
+│   └── <主题>/
+├── tutorials/              # 教程文档：中文分章教程
+│   └── <主题>/
+│       ├── README.md       # 主题导航入口
+│       ├── OVERVIEW.md     # 主题总览（论文/教程/代码关系）
+│       └── 01_*.md         # 章节，编号排序
+└── projects/               # 代码项目：可运行参考实现
+    └── <主题>/
+        ├── README.md       # 项目说明与快速开始
+        ├── *.py
+        └── tests/
 ```
+
+新增主题时三处联动：先 `papers/<主题>/`（论文）→ 再 `tutorials/<主题>/`（教程）→ 最后 `projects/<主题>/`（可选代码），并更新各类索引 README。
 
 ## 3. 文档规范
 
@@ -118,9 +123,9 @@ module_name/
 ### 6.2 目录结构
 
 ```
-tutorial/      # 纯文档目录
-code/          # 纯代码目录
-assets/        # 静态资源（图片、图表等）
+papers/         # 论文资料（源码、PDF）
+tutorials/      # 教程文档（纯 Markdown）
+projects/       # 代码项目（可运行实现）
 ```
 
 ## 7. 质量检查

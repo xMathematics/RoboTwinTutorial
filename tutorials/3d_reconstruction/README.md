@@ -12,7 +12,7 @@
 
 ## 相关资源
 
-- [NeRF 论文](../nerf/paper/latex/arxiv_submission.tex)
+- [NeRF 论文源码](../../papers/nerf/latex/arxiv_submission.tex)
 - [3D 重建相关论文](https://arxiv.org/list/cs.CV/recent)
 
 ## 学习路径
