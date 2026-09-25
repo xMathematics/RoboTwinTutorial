@@ -6,7 +6,7 @@
 |------|--------|------|
 | [nerf/](nerf/) | 10 章 + 导航 + 主题总览 | [README.md](nerf/README.md) |
 | [robotwin/](robotwin/) | 10 章 | [README.md](robotwin/README.md) |
-| [slam/](slam/) | 规划中 | [README.md](slam/README.md) |
+| [slam/](slam/) | 10 章架构已定（写作中） | [README.md](slam/README.md) |
 | [3d_reconstruction/](3d_reconstruction/) | 规划中 | [README.md](3d_reconstruction/README.md) |
 
 ## 目录约定
