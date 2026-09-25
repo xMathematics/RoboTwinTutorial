@@ -1,0 +1,158 @@
+name: 定期提交代码
+
+on:
+  # 每周一上午9点提交
+  schedule:
+    - cron: '0 9 * * 1'
+
+  # 手动触发
+  workflow_dispatch:
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: 安装 Git 工具
+        run: |
+          pip install gitpython
+
+      - name: 检查变更
+        id: check_changes
+        run: |
+          python - <<'PYTHON'
+          import os
+          import subprocess
+          import json
+
+          # 获取所有未跟踪的文件
+          result = subprocess.run(
+              ['git', 'ls-files', '--others', '--exclude-standard'],
+              capture_output=True,
+              text=True
+          )
+          files = [f for f in result.stdout.strip().split('\n') if f]
+
+          # 获取所有修改的文件
+          result = subprocess.run(
+              ['git', 'diff', '--name-only'],
+              capture_output=True,
+              text=True
+          )
+          modified = [f for f in result.stdout.strip().split('\n') if f]
+
+          # 检查是否有变更
+          has_changes = bool(files or modified)
+
+          # 输出结果供后续步骤使用
+          print(f"has_changes={has_changes}")
+          print(f"untracked={json.dumps(files)}")
+          print(f"modified={json.dumps(modified)}")
+
+          # 创建状态文件
+          with open('status.json', 'w') as f:
+              f.write(json.dumps({
+                  'has_changes': has_changes,
+                  'untracked': files,
+                  'modified': modified
+              }))
+          PYTHON
+
+      - name: 显示变更内容
+        run: |
+          if [ -f status.json ]; then
+              echo "变更内容:"
+              cat status.json
+          fi
+
+      - name: 提交变更
+        if: steps.check_changes.outputs.has_changes == 'True'
+        run: |
+          python - <<'PYTHON'
+          import os
+          import subprocess
+          import json
+
+          with open('status.json', 'r') as f:
+              status = json.load(f)
+
+          if not status['has_changes']:
+              print("没有需要提交的变更")
+              exit(0)
+
+          # 获取所有变更文件
+          all_files = set(status['untracked']) | set(status['modified'])
+          all_files = [f for f in all_files if f]  # 移除空字符串
+
+          # 添加文件到暂存区
+          subprocess.run(['git', 'add'] + all_files, check=True)
+
+          # 获取当前日期
+          result = subprocess.run(['date', '+%Y-%m-%d'], capture_output=True, text=True)
+          today = result.stdout.strip()
+
+          # 生成提交信息
+          commit_msg = f"docs(global): 自动提交于 {today}\n\n"
+
+          if status['untracked']:
+              commit_msg += f"新增文件:\n"
+              for f in sorted(status['untracked']):
+                  commit_msg += f"- {f}\n"
+
+          if status['modified']:
+              commit_msg += f"\n修改文件:\n"
+              for f in sorted(status['modified']):
+                  commit_msg += f"- {f}\n"
+
+          # 提交
+          subprocess.run(['git', 'commit', '-m', commit_msg], check=True)
+
+          print(f"成功提交 {len(all_files)} 个文件")
+          print(f"提交信息:\n{commit_msg}")
+          PYTHON
+
+      - name: 推送到远程仓库
+        run: |
+          python - <<'PYTHON'
+          import subprocess
+          import os
+
+          # 检查是否有未提交的变更
+          result = subprocess.run(
+              ['git', 'status', '--porcelain'],
+              capture_output=True,
+              text=True
+          )
+
+          if not result.stdout.strip():
+              print("没有需要推送的变更")
+              exit(0)
+
+          # 推送到远程仓库
+          result = subprocess.run(
+              ['git', 'push'],
+              capture_output=True,
+              text=True
+          )
+
+          if result.returncode == 0:
+              print("成功推送到远程仓库")
+          else:
+              print(f"推送失败: {result.stderr}")
+              exit(1)
+          PYTHON
+
+      - name: 清理状态文件
+        if: always()
+        run: |
+          rm -f status.json

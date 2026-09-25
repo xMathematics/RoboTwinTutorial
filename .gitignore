@@ -9,3 +9,13 @@ venv/
 # --- 训练产物 ---
 nerf/code/logs/
 nerf/code/data/
+
+# --- 文档生成 ---
+docs/
+*.log
+
+# --- 临时文件 ---
+*.swp
+*.swo
+*~
+.DS_Store

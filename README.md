@@ -90,3 +90,134 @@ python run_nerf.py --config data/demo_scene --mode render --exp demo_smoke --ckp
 原结构问题：`doc/`（RoboTwin 教程）与 `latex/`（NeRF 论文）主题不一致、`code/` 与 `documents/` 为空。
 重构后按"项目主题"组织：NeRF 主线独立成 `nerf/`（论文/教程/代码三位一体），
 RoboTwin 内容完整保留于 `robotwin/`，并新增 `.vscode/` 环境配置与统一 README。
+
+---
+
+## 📋 全局约束文档
+
+项目采用统一的开发规范，详细规范请参考 [`CONSTRAINTS.md`](CONSTRAINTS.md)：
+
+### 核心规范
+
+1. **文档规范**
+   - 使用中文撰写
+   - Markdown 格式规范
+   - 文件命名规范（`数字_标题.md`）
+
+2. **代码规范**
+   - 遵循 PEP 8
+   - 类型提示
+   - 代码注释
+
+3. **提交规范**
+   - Conventional Commits 格式
+   - 定期提交
+   - 分支管理
+
+4. **文档与代码分离**
+   - 文档和代码分开存储
+   - 文档侧重讲解原理
+   - 代码侧重实现细节
+
+### 版本控制
+
+项目使用语义化版本号：`MAJOR.MINOR.PATCH`
+
+- `MAJOR`: 不兼容的 API 修改
+- `MINOR`: 向下兼容的功能新增
+- `PATCH`: 向下兼容的问题修正
+
+变更记录请查看 [`CHANGELOG.md`](CHANGELOG.md)。
+
+---
+
+## 🤖 自动化工具
+
+### 本地自动提交
+
+使用提供的脚本定期提交代码：
+
+```bash
+# 在项目根目录执行
+./scripts/auto_commit.sh
+```
+
+### GitHub Actions
+
+项目配置了 GitHub Actions 工作流，自动每周一上午 9 点提交代码。
+
+- **工作流文件**: `.github/workflows/auto-commit.yml`
+- **触发方式**: 定时任务 + 手动触发
+
+#### 手动触发
+
+在 GitHub 仓库页面：
+1. 进入 Actions 标签
+2. 选择 "定期提交代码" 工作流
+3. 点击 "Run workflow" 按钮
+4. 选择分支并运行
+
+#### 自定义提交频率
+
+编辑 `.github/workflows/auto-commit.yml` 文件中的 cron 表达式：
+
+```yaml
+schedule:
+  - cron: '0 9 * * 1'  # 每周一上午 9 点
+```
+
+cron 表达式格式：`分 时 日 月 周`
+
+常用示例：
+- `0 9 * * 1` - 每周一上午 9 点
+- `0 9 * * *` - 每天上午 9 点
+- `0 9 * * 1-5` - 每周一到周五上午 9 点
+- `0 9 1 * *` - 每月 1 号上午 9 点
+
+---
+
+## 📊 项目结构（已重构）
+
+```
+tutorial/
+├── README.md               ← 本文件（总览）
+├── .vscode/                ← VS Code 配置（conda 环境 llm_env）
+│   ├── settings.json       ← Python 解释器 = llm_env
+│   ├── launch.json         ← 训练/测试/渲染 调试配置
+│   ├── tasks.json          ← 同名任务
+│   └── extensions.json     ← 推荐扩展
+│
+├── nerf/                   ★ NeRF 论文主线
+│   ├── README.md           NeRF 子项目总览
+│   ├── paper/latex/        论文 LaTeX 源码（原 latex/ 移入）
+│   │   └── arxiv_submission.tex  主文件
+│   ├── tutorial/           详细中文教程（10 章 + 导航）
+│   └── code/               最小可运行 PyTorch 参考实现
+│       ├── run_nerf.py     CLI 主入口
+│       ├── nerf/           核心模块（编码/模型/采样/渲染/数据/训练）
+│       ├── scripts/make_demo_data.py   演示数据生成
+│       └── tests/test_core.py          单元测试（8/8 通过）
+│
+├── robotwin/               RoboTwin 2.0 学习资料（原 doc/ + paper/ 移入，独立保留）
+│   ├── tutorial/           原 10 章中文教程
+│   └── paper/              原论文 PDF（arXiv:2506.18088）
+│
+├── slam/                   SLAM 模块
+│   └── tutorial/
+│
+├── 3d_reconstruction/     3D 重建模块
+│   └── tutorial/
+│
+├── documents/              通用文档（预留）
+│
+├── .github/                ← GitHub Actions 工作流
+│   └── workflows/
+│       └── auto-commit.yml  定期提交工作流
+│
+├── scripts/                ← 自动化脚本
+│   ├── auto_commit.sh      # 自动提交脚本
+│   └── README.md           # 脚本说明
+│
+├── CONSTRAINTS.md          # 全局约束文档
+└── CHANGELOG.md            # 变更日志
+```
