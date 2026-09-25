@@ -38,6 +38,7 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 - **解决方法概览**：联立定位与建图的状态估计问题；传感器选型对比（视觉 / 激光 / IMU / 多传感器融合）。
 - **理论依据**：概率机器人学（Thrun et al., *Probabilistic Robotics*）第 1、2 章。
 - **推导产出**：SLAM 的形式化定义——状态方程 + 观测方程（含噪声）。
+- **配套阅读**：[papers/slam/README.md](../../papers/slam/README.md)——已收录经典 10 篇 + 前沿 7 篇，按章对应。
 
 ### 02｜三维刚体运动：旋转与位姿
 
@@ -133,6 +134,6 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 ## 资源
 
 - 教材：[视觉 SLAM 十四讲（第 2 版）](https://github.com/gaoxiang12/slambook2)（配套代码）
-- 经典论文：[ORB-SLAM3](https://arxiv.org/abs/2007.11898) ｜ [VINS-Mono](https://arxiv.org/abs/1708.03852) ｜ [DBoW2](https://ieeexplore.ieee.org/document/6722504)
+- 经典论文：已收录至 [papers/slam/classics/](../../papers/slam/README.md)（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono）；DBoW2 见 [IEEE](https://ieeexplore.ieee.org/document/6722504)
 - 数据集：[EuRoC MAV](https://projects.asl.ethz.ch/datasets/) ｜ [TUM RGB-D](https://cvg.cit.tum.de/data/datasets/rgbd-dataset)
 - 相关主题：[3D 重建](../3d_reconstruction/README.md)（稠密建图部分交汇）｜ [NeRF](../nerf/OVERVIEW.md)（神经隐式建图是前沿交汇点）

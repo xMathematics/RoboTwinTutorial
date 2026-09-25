@@ -12,6 +12,7 @@
 - 变更日志 (CHANGELOG.md)
 - 文档规范新增 §3.4「论述结构规范（问题导向五步法）」：核心知识点必须按"问题场景 → 解决方法 → 选型理由 → 理论依据 → 完整推导"展开，推导禁止跳步；附 NeRF 体积渲染完整示范与检查清单项
 - SLAM 教程架构文档：10 章规划，每章预埋问题场景锚点与推导产出清单，含学习路径依赖图与资源清单
+- SLAM 论文库 `papers/slam/`：经典 10 篇（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono）+ 前沿 7 篇（DROID-SLAM、NeRF-SLAM、GS-SLAM、SplaTAM、MonoGS、MASt3R-SLAM、VGGT-GS SLAM），全部校验 PDF 完整性；分类索引含入选理由与教程章节映射
 
 ### 变更
 - **项目重构**：按资源类型重新划分目录——`papers/`（论文库）、`tutorials/`（教程文档）、`projects/`（代码项目），原 `nerf/`、`robotwin/`、`slam/`、`3d_reconstruction/` 按主题拆分归入三类

@@ -7,6 +7,7 @@
 | [nerf/](nerf/) | NeRF 论文 LaTeX 完整源码（含图、参考文献、结果表） | [arxiv_submission.tex](nerf/latex/arxiv_submission.tex) |
 | [robotwin/](robotwin/) | RoboTwin 2.0 论文 PDF（arXiv:2506.18088） | [2506.18088v2.pdf](robotwin/2506.18088v2.pdf) |
 | [3d_reconstruction/](3d_reconstruction/) | 3D 重建论文 arXiv 源码包（arXiv:2509.13414） | [arXiv-2509.13414v3.tar.gz](3d_reconstruction/arXiv-2509.13414v3.tar.gz) |
+| [slam/](slam/) | SLAM 论文 17 篇：经典 10 篇（FastSLAM/PTAM/ORB 系列直接法/VIO/LOAM）+ 前沿 7 篇（DROID/NeRF/3DGS/基础模型路线） | [README.md](slam/README.md) |
 
 对应的中文解读见 [`tutorials/`](../tutorials/)，相关代码实现见 [`projects/`](../projects/)。
 
