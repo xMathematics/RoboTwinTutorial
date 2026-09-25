@@ -1,4 +1,4 @@
-# tutorial — 3D 视觉论文研读工作区
+# RoboTwinTutorial — 3D 视觉论文研读工作区
 
 本工作区以 **NeRF 论文精读**为主线，配套中文教程与最小 PyTorch 参考实现；同时保留了原有的 RoboTwin 2.0 学习资料（独立目录）。
 
@@ -7,7 +7,7 @@
 ## 📁 目录结构（已重构）
 
 ```
-tutorial/
+RoboTwinTutorial/
 ├── README.md               ← 本文件（总览）
 ├── .vscode/                ← VS Code 配置（conda 环境 llm_env）
 │   ├── settings.json       ← Python 解释器 = llm_env
@@ -179,7 +179,7 @@ cron 表达式格式：`分 时 日 月 周`
 ## 📊 项目结构（已重构）
 
 ```
-tutorial/
+RoboTwinTutorial/
 ├── README.md               ← 本文件（总览）
 ├── .vscode/                ← VS Code 配置（conda 环境 llm_env）
 │   ├── settings.json       ← Python 解释器 = llm_env
