@@ -17,7 +17,7 @@
 由 ``tests/test_vins.py`` 直接驱动。
 
 论文：T. Qin, P. Li, S. Shen, "VINS-Mono: A Robust and Versatile Monocular
-Visual-Inertial State Estimator", IEEE T-RO 2018
+Visual-Inertial State Estimator", IEEE RA-L 2018
 （``papers/slam/classics/arXiv-1708.03852_VINS-Mono.pdf``）。
 
 尺度可观性（教程 §10.3 第 3 步）

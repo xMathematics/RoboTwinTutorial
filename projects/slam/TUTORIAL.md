@@ -29,7 +29,7 @@
 | DSO（Engel et al., ECCV 2016） | `photoba/` | 滑窗光度 BA + 曝光补偿 | [06](../../tutorials/slam/06_视觉里程计-ii直接法.md) / [08](../../tutorials/slam/08_后端-ii图优化与-ba.md) |
 | LOAM（Zhang & Singh, RSS 2014） | `loam2d/` | 边缘/平面特征 + 双速率里程计/建图 | [10 建图与系统实战](../../tutorials/slam/10_建图与系统实战.md) 扩展 |
 | IMU 预积分（Forster et al., T-RO 2017） | `preint/` | 流形预积分测量 | [10](../../tutorials/slam/10_建图与系统实战.md) §10.2 |
-| VINS-Mono（Qin et al., T-RO 2018） | `vins/` | 视觉惯性紧耦合因子图 | [10](../../tutorials/slam/10_建图与系统实战.md) §10.3 |
+| VINS-Mono（Qin et al., RA-L 2018） | `vins/` | 视觉惯性紧耦合因子图 | [10](../../tutorials/slam/10_建图与系统实战.md) §10.3 |
 | DROID-SLAM（Teed & Deng, NeurIPS 2021） | `droidlite/` | 递归稠密 BA（结构演示，无学习组件） | [10](../../tutorials/slam/10_建图与系统实战.md) 扩展 |
 | ——（共享工具层） | `core/` | SO(3)/SE(3) 李代数、针孔相机、GN/LM 求解器 | [02](../../tutorials/slam/02_三维刚体运动旋转与位姿.md) / [03](../../tutorials/slam/03_概率状态估计基础.md) / [04](../../tutorials/slam/04_相机模型与特征提取.md) / [05](../../tutorials/slam/05_视觉里程计-i特征点法.md) / [08](../../tutorials/slam/08_后端-ii图优化与-ba.md) |
 | ——（统一评估） | `metrics.py` | ATE / RPE / 尺度比 / 旋转误差 | [METRICS.md](METRICS.md) |

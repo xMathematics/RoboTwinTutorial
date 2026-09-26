@@ -2,7 +2,7 @@
 
 函数流水线
 ----------
-简化的 VINS-Mono（Qin, Li & Shen, IEEE T-RO 2018）：滑动窗口内的关键帧由
+简化的 VINS-Mono（Qin, Li & Shen, IEEE RA-L 2018）：滑动窗口内的关键帧由
 IMU 预积分因子（包装 ``preint.Preintegration``，Forster et al. T-RO 2017
 Eq.(45)+(48)）与带 Huber 鲁棒化的单目归一化坐标重投影因子联合估计，外层用
 Levenberg-Marquardt 循环配 SE(3) 流形位姿更新求解。内置的

@@ -61,7 +61,7 @@ Eq.(38)，教程 (10.5)）中、即预积分测量与状态比对时才重新出
 ``ΔR_true = ΔR̃ Exp(−δφ^)``（``δφ`` 表达在系 *j* 中），
 ``Δv_true = Δṽ − δv``、``Δp_true = Δp̃ − δp``（``δv, δp`` 表达在系 *i* 中）。
 ``η^Δ = [δφ; δv; δp]`` 的 9×9 协方差 ``Σ_ij`` 逐样本按线性递推传播
-（paper Eq.(46)-(47) / 紧凑形式 (62)-(63)，教程 (10.7)；与 EKF 预测同构，
+（paper 一阶递推 Eq.(59)-(61) / A、B 紧凑形式 (62)-(63)，教程 (10.7)；与 EKF 预测同构，
 第 03 章 (3.9)）::
 
     Σ ← A Σ A^T + B Σ_η B^T,
@@ -193,7 +193,7 @@ class Preintegration:
         delta_v: (3,) ``Δṽ_ij``（无重力速度积分），单位 m/s。
         delta_p: (3,) ``Δp̃_ij``（无重力位置积分），单位 m。
         cov:     (9, 9) ``η^Δ = [δφ; δv; δp]`` 的协方差 ``Σ_ij``
-            （Eq.(46)-(47)；δφ 单位 rad、δv 单位 m/s、δp 单位 m）。
+            （A/B 元素依论文 (59)-(61) 线性化；δφ 单位 rad、δv 单位 m/s、δp 单位 m）。
         j_bias:  (9, 6) 偏置雅可比 ``[∂ΔR̃/∂b^g, 0; ∂Δṽ/∂b, ∂Δp̃/∂b]``，
             分块顺序 ``[[R,0],[v_g,v_a],[p_g,p_a]]``（附录 IX-B）。
         bias0, params, duration, n_samples: 与传入一致 / 由其导出
@@ -261,7 +261,7 @@ class Preintegration:
     def _propagate_covariance(
         self, E: np.ndarray, Jr: np.ndarray, R: np.ndarray, a: np.ndarray, dt: float
     ) -> None:
-        """递推一步 ``Σ ← A Σ A^T + B Σ_η B^T``（paper Eq.(46)-(47)）。"""
+        """递推一步 ``Σ ← A Σ A^T + B Σ_η B^T``（paper Eq.(59)-(63)，紧凑形式 (62)-(63)）。"""
         A = np.zeros((9, 9))
         A[0:3, 0:3] = E.T
         A[3:6, 0:3] = -R @ hat(a) * dt
