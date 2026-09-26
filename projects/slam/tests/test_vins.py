@@ -1,7 +1,7 @@
 """``projects/slam/vins`` 的测试 —— 直接运行：``python tests/test_vins.py``。
 
 校验教程第 10 章 §10.3 紧耦合视觉-惯性捆绑（论文：VINS-Mono, Qin, Li & Shen,
-IEEE T-RO 2018；IMU 因子按 Forster et al., T-RO 2017 Eq.(45)+(48)）：
+IEEE RA-L 2018；IMU 因子按 Forster et al., T-RO 2017 Eq.(45)+(48)）：
 
 1. 解析重投影雅可比 vs 有限差分（穿过求解器实际使用的同一回缩；
    符号/约定检查）；
