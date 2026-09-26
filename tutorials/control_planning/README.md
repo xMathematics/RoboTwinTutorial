@@ -1,6 +1,7 @@
 # 机器人控制与规划 — 教程架构
 
 > **主题**：Robot Control & Planning（运动规划、最优控制与伺服控制）
+> **论文精读**：9 篇逐篇精读见 [精读/](精读/README.md)
 > **状态**：10 章全部完成 ｜ 主线：RRT/RRT*、Crocoddyl、PETS、Khatib/Hogan、CBF、PPO/SAC
 
 本文件是控制与规划教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
