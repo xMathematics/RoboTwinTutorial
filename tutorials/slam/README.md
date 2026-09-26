@@ -1,7 +1,7 @@
 # SLAM — 教程架构
 
 > **主题**：Simultaneous Localization and Mapping（同步定位与建图）
-> **状态**：01–04、07–10 已完成；05–06 写作中 ｜ 主线教材：《视觉 SLAM 十四讲》（高翔）+ 概率机器人学（Thrun）
+> **状态**：10 章全部完成 ｜ **论文精读**：18 篇逐篇精读见 [精读/](精读/README.md) ｜ 主线教材：《视觉 SLAM 十四讲》（高翔）+ 概率机器人学（Thrun）
 
 本文件是 SLAM 教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
 后续各章按 [CONSTRAINTS.md §3.4](../../CONSTRAINTS.md) 五步法
@@ -132,6 +132,9 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 - 公式编号沿用教材与经典论文的惯例，便于跨章回引
 
 ## 资源
+
+**论文精读**：papers/slam/ 收录的 18 篇论文已逐篇精读（含关键公式推导与原文式号核对），
+入口见 [精读/README.md](精读/README.md)——与本章教程"概念篇"互补的"论文篇"。
 
 - 教材：[视觉 SLAM 十四讲（第 2 版）](https://github.com/gaoxiang12/slambook2)（配套代码）
 - 经典论文：已收录至 [papers/slam/classics/](../../papers/slam/README.md)（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono）；DBoW2 见 [IEEE](https://ieeexplore.ieee.org/document/6722504)
