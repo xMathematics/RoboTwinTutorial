@@ -1,6 +1,14 @@
-"""Command-line entry point: train / test / render.
+"""命令行入口：训练 / 测试 / 渲染三合一。
 
-Usage:
+函数流水线：本模块是整个项目的入口，串起所有模块——
+    parse_args → make_config（构造 Config，无 cuda 时回退 cpu）
+    train 模式：  load_blender_data（data_utils）→ train_nerf（trainer）→ 保存 checkpoint
+    test 模式：   load_ckpt → 逐张 render_image（内部走 render.render_rays）
+                  → metrics.psnr / metrics.ssim 逐图评分（统一测评层，见 nerf/metrics.py）
+    render 模式： load_blender_data（只为取 H/W/focal）→ render_path_poses 生成圆轨迹位姿
+                  → rays.get_rays → render_image → 逐帧存 PNG
+
+用法（Usage）：
     python run_nerf.py --config data/lego --mode train --exp lego_full
     python run_nerf.py --config data/lego --mode test  --exp lego_full --ckpt logs/lego_full/latest.pt
     python run_nerf.py --config data/lego --mode render --exp lego_full --ckpt logs/lego_full/latest.pt --frames 120
@@ -15,11 +23,13 @@ import torch
 
 from nerf.config import Config
 from nerf.data_utils import load_blender_data
+from nerf.metrics import psnr, ssim
 from nerf.rays import get_rays
 from nerf.trainer import build_models, train_nerf
 
 
 def parse_args() -> argparse.Namespace:
+    """解析命令行参数（help 文本为运行时字符串，保持英文以便 --help 输出稳定）。"""
     p = argparse.ArgumentParser(description="Minimal PyTorch NeRF (teaching version)")
     p.add_argument("--config", required=True, help="path to a nerf_synthetic scene dir")
     p.add_argument("--mode", choices=["train", "test", "render"], default="train")
@@ -35,8 +45,10 @@ def parse_args() -> argparse.Namespace:
 
 
 def make_config(args: argparse.Namespace) -> Config:
+    """由命令行参数构造 Config：默认值 + tiny 快速冒烟档 + 显式覆写项。"""
     cfg = Config(datadir=args.config, exp_name=args.exp)
     if args.tiny:
+        # tiny 档：小 batch、少步数、少采样点，用于分钟级冒烟验证
         cfg.half_res = True
         cfg.batch_size = 256
         cfg.steps = 1000
@@ -55,7 +67,7 @@ def make_config(args: argparse.Namespace) -> Config:
 
 @torch.no_grad()
 def render_image(model_coarse, model_fine, rays_o, rays_d, cfg, chunk=8192, perturb=False):
-    """Render a full [H, W, 3] image from a [H, W, 3] ray grid, chunked over rays."""
+    """把 [H, W, 3] 的光线网格渲染成一整张 [H, W, 3] 图像，按 chunk 分块防止显存爆掉。"""
     from nerf.render import render_rays
 
     H, W = rays_o.shape[:2]
@@ -68,34 +80,16 @@ def render_image(model_coarse, model_fine, rays_o, rays_d, cfg, chunk=8192, pert
             cfg.near, cfg.far, cfg.n_coarse, cfg.n_fine,
             cfg.l_xyz, cfg.l_dir, cfg.use_viewdirs, perturb=perturb,
         )
-        rgb[i : i + chunk] = out["rgb_fine"]
+        rgb[i : i + chunk] = out["rgb_fine"]  # 取 fine 网络的渲染结果作为最终颜色
     return rgb.reshape(H, W, 3)
 
 
-def psnr(img1: np.ndarray, img2: np.ndarray) -> float:
-    mse = np.mean((img1 - img2) ** 2)
-    return float(10.0 * np.log10(1.0 / (mse + 1e-10)))
-
-
-def ssim(img1: np.ndarray, img2: np.ndarray) -> float:
-    """Windowed SSIM (simple Gaussian-window implementation)."""
-    from scipy.ndimage import gaussian_filter
-
-    k1, k2, L = 0.01, 0.03, 1.0
-    c1, c2 = (k1 * L) ** 2, (k2 * L) ** 2
-    mu1 = gaussian_filter(img1, 1.5)
-    mu2 = gaussian_filter(img2, 1.5)
-    mu1_sq, mu2_sq, mu1_mu2 = mu1 * mu1, mu2 * mu2, mu1 * mu2
-    s1_sq = gaussian_filter(img1 * img1, 1.5) - mu1_sq
-    s2_sq = gaussian_filter(img2 * img2, 1.5) - mu2_sq
-    s12 = gaussian_filter(img1 * img2, 1.5) - mu1_mu2
-    ssim_map = ((2 * mu1_mu2 + c1) * (2 * s12 + c2)) / (
-        (mu1_sq + mu2_sq + c1) * (s1_sq + s2_sq + c2)
-    )
-    return float(np.mean(ssim_map))
-
-
 def load_ckpt(cfg: Config, ckpt_path: str):
+    """加载 checkpoint 并按 cfg 重建同构网络，切到 eval 模式。
+
+    注：本实现的 MLP 无 dropout/BN，eval() 行为上无实际作用；评测时的确定性
+    由 render_rays(perturb=False) 保证。
+    """
     ckpt = torch.load(ckpt_path, map_location=cfg.device)
     model_coarse, model_fine = build_models(cfg, cfg.device)
     model_coarse.load_state_dict(ckpt["coarse"])
@@ -106,7 +100,11 @@ def load_ckpt(cfg: Config, ckpt_path: str):
 
 
 def look_at(pos: np.ndarray, center=(0, 0, 0), up=(0, 1, 0)) -> np.ndarray:
-    """Build a c2w matrix (Blender convention: camera looks along -z)."""
+    """构造 c2w 矩阵（Blender 约定：相机朝 -z 看，y 轴尽量对齐 up）。
+
+    几何含义：z 轴 = 相机指向"看点"的反方向，x = up × z，y = z × x，
+    平移列放相机位置 pos（世界坐标）。
+    """
     pos = np.asarray(pos, dtype=np.float32)
     center = np.asarray(center, dtype=np.float32)
     up = np.asarray(up, dtype=np.float32)
@@ -121,7 +119,7 @@ def look_at(pos: np.ndarray, center=(0, 0, 0), up=(0, 1, 0)) -> np.ndarray:
 
 
 def render_path_poses(n_frames: int, radius: float = 4.0) -> list[np.ndarray]:
-    """Circular camera path in the x-z plane looking at the origin."""
+    """生成 x-z 平面内半径 radius 的圆形相机轨迹，全部朝向原点（共 n_frames 个 c2w）。"""
     poses = []
     for i in range(n_frames):
         theta = 2.0 * np.pi * i / n_frames
@@ -131,6 +129,7 @@ def render_path_poses(n_frames: int, radius: float = 4.0) -> list[np.ndarray]:
 
 
 def save_image(img: np.ndarray, path: str) -> None:
+    """把 [H, W, 3]（∈ [0,1]）裁剪到合法区间后量化为 uint8 存成 PNG。"""
     os.makedirs(os.path.dirname(path), exist_ok=True)
     imageio.v2.imwrite(path, (np.clip(img, 0, 1) * 255).astype(np.uint8))
 
@@ -145,7 +144,7 @@ def main() -> None:
     log_dir = os.path.join(cfg.log_dir, cfg.exp_name)
     os.makedirs(log_dir, exist_ok=True)
 
-    # ---------- train ----------
+    # ---------- 训练 ----------
     if args.mode == "train":
         rays_o, rays_d, imgs, _, H, W, focal = load_blender_data(
             cfg.datadir, "train", cfg.half_res, testskip=1
@@ -158,7 +157,7 @@ def main() -> None:
         )
         print(f"[train] saved -> {ckpt}")
 
-    # ---------- test / render ----------
+    # ---------- 测试 / 渲染 ----------
     else:
         if args.ckpt is None:
             args.ckpt = os.path.join(log_dir, "latest.pt")
@@ -192,7 +191,7 @@ def main() -> None:
             print(f"[test] PSNR {np.mean(psnrs):.2f} | SSIM {np.mean(ssims):.4f}")
 
         elif args.mode == "render":
-            # render a camera trajectory into video frames
+            # 沿一条相机轨迹逐帧渲染成视频帧
             _, _, _, _, H, W, focal = load_blender_data(
                 cfg.datadir, "train", cfg.half_res, testskip=1
             )
