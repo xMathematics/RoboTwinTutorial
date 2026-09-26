@@ -1,22 +1,22 @@
 {
   // ===== Python 环境（Anaconda / conda）=====
-  // 项目使用 conda 环境 llm_env（位于 /home/dzxu/anaconda3/envs/llm_env）
-  // 已含 torch 2.11.0 / numpy / imageio / scipy / tqdm / pillow
+  // 项目完全用 VS Code 开发与测试（见 .vscode/SETUP.md）；conda 环境 llm_env（/home/dzxu/anaconda3/envs/llm_env）
+  // 已含 torch 2.11.0+cu130 / numpy 2.2.6 / pytest 9.1.1 / pypdf；清单见根目录 environment.yml
   "python.defaultInterpreterPath": "/home/dzxu/anaconda3/envs/llm_env/bin/python",
   "python.terminal.activateEnvironment": true,
   "python.terminal.activateEnvInCurrentTerminal": true,
-  "python.analysis.extraPaths": ["${workspaceFolder}/projects/nerf"],
+  "python.analysis.extraPaths": ["${workspaceFolder}/projects/nerf", "${workspaceFolder}/projects/slam"],
   "python.analysis.typeCheckingMode": "basic",
 
   // ===== 测试 =====
   "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": ["projects/nerf/tests"],
+  "python.testing.pytestArgs": ["projects/nerf/tests", "projects/slam/tests"],
   "python.testing.cwd": "${workspaceFolder}",
 
   // ===== 终端 =====
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.env.linux": {
-    "PYTHONPATH": "${workspaceFolder}/projects/nerf"
+    "PYTHONPATH": "${workspaceFolder}/projects/nerf:${workspaceFolder}/projects/slam"
   },
 
   // ===== 代码质量 =====

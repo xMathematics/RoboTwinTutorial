@@ -2,7 +2,7 @@
 
 按 **论文（papers）/ 教程（tutorials）/ 项目（projects）** 三大类组织的研读工作区，
 当前主线为 **NeRF 论文精读**（论文源码 + 中文教程 + PyTorch 参考实现），
-并包含 RoboTwin 2.0、SLAM、3D 重建等主题的学习资料。
+并包含 RoboTwin 2.0、SLAM、3D 重建、机器人控制与规划等主题的学习资料。
 
 ---
 
@@ -14,22 +14,26 @@ RoboTwinTutorial/
 ├── CONSTRAINTS.md          ← 全局约束规范（文档/代码/提交规范）
 ├── CHANGELOG.md            ← 变更日志
 │
-├── papers/                 ★ 论文库（按主题分目录）
+├── papers/                 ★ 论文库（按主题分目录；本地资料，已加入 .gitignore 不上传）
 │   ├── README.md           论文索引
 │   ├── nerf/latex/         NeRF 论文 LaTeX 完整源码
-│   ├── robotwin/           RoboTwin 2.0 论文 PDF（arXiv:2506.18088）
-│   └── 3d_reconstruction/  3D 重建论文 arXiv 源码包（arXiv:2509.13414）
+│   ├── robotwin/           机器人操作论文（RoboTwin 1.0/2.0 + VLA/模仿学习 11 篇）
+│   ├── 3d_reconstruction/  3D 重建论文 12 篇 + LaTeX 源码
+│   ├── slam/               SLAM 论文 18 篇 + LaTeX 源码
+│   └── control_planning/   控制与规划论文 9 篇 + LaTeX 源码
 │
 ├── tutorials/              ★ 教程文档（按主题分目录，中文）
 │   ├── README.md           教程总导航
 │   ├── nerf/               NeRF 10 章教程 + OVERVIEW 主题总览
 │   ├── robotwin/           RoboTwin 2.0 10 章教程
-│   ├── slam/               SLAM（规划中）
-│   └── 3d_reconstruction/  3D 重建（规划中）
+│   ├── slam/               SLAM 10 章教程 + OVERVIEW
+│   ├── 3d_reconstruction/  3D 重建（写作中）
+│   └── control_planning/   控制与规划（写作中）
 │
 ├── projects/               ★ 代码项目（可运行参考实现）
 │   ├── README.md           项目索引与快速开始
-│   └── nerf/               NeRF PyTorch 教学版（8/8 单元测试通过）
+│   ├── nerf/               NeRF PyTorch 教学版（8/8 单元测试通过）
+│   └── slam/               SLAM 论文教学实现（core/fastslam/epipolar/bowloop/...）
 │
 ├── scripts/                项目管理脚本（auto_commit.sh 自动提交）
 ├── .github/workflows/      GitHub Actions（每周一 9:00 自动提交）
@@ -50,7 +54,7 @@ RoboTwinTutorial/
 - 中文教程：[`tutorials/nerf/`](tutorials/nerf/README.md)（主题总览见 [OVERVIEW](tutorials/nerf/OVERVIEW.md)）
 - 参考实现：[`projects/nerf/`](projects/nerf/README.md)
 
-其他主题：[RoboTwin 2.0 教程](tutorials/robotwin/README.md) ｜ [SLAM](tutorials/slam/README.md) ｜ [3D 重建](tutorials/3d_reconstruction/README.md)
+其他主题：[RoboTwin 2.0 教程](tutorials/robotwin/README.md) ｜ [SLAM](tutorials/slam/README.md) ｜ [3D 重建](tutorials/3d_reconstruction/README.md) ｜ [控制与规划](tutorials/control_planning/README.md)
 
 ---
 
@@ -58,12 +62,17 @@ RoboTwinTutorial/
 
 ### 1. 环境（Anaconda）
 
-项目已配置 VS Code 使用 conda 环境 **`llm_env`**（含 torch 2.11.0）。
+项目统一使用 Anaconda 环境 **`llm_env`**，配置清单见根目录 [environment.yml](environment.yml)
+（规范见 [CONSTRAINTS.md §4.6](CONSTRAINTS.md)）。
 
 ```bash
-conda activate llm_env
-pip install -r projects/nerf/requirements.txt   # 缺什么装什么
+conda env create -f environment.yml && conda activate llm_env   # 全新创建
+# 验证（应打印 torch/numpy/pytest 版本号）：
+python -c "import torch, numpy, pytest; print(torch.__version__, numpy.__version__, pytest.__version__)"
+pip install -r projects/nerf/requirements.txt   # NeRF 额外依赖（缺什么装什么）
 ```
+
+各项目的调试/单点测试/全量测试用法见其 `DEBUG.md`，测评指标见其 `METRICS.md`。
 
 ### 2. 读教程
 

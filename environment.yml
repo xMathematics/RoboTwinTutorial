@@ -1,0 +1,22 @@
+# RoboTwinTutorial 开发环境配置清单（Anaconda）
+# ============================================================
+# 用法：
+#   conda env create -f environment.yml     # 全新创建 llm_env
+#   conda env update -f environment.yml     # 更新已有 llm_env
+#   conda activate llm_env
+# 验证：
+#   python -c "import torch, numpy, pytest; print(torch.__version__, numpy.__version__, pytest.__version__)"
+# 规范：见 CONSTRAINTS.md §4.6——新增依赖必须同步本文件。
+# 注意：torch 版本随 CUDA 而异（本机 cu130）；重建时如遇差异，
+#       以 pytorch.org 官方选择器为准安装 torch，再补齐其余依赖。
+name: llm_env
+channels:
+  - defaults
+dependencies:
+  - python=3.10
+  - numpy=2.2
+  - pip
+  - pip:
+      - torch>=2.5          # 本机实测 2.11.0+cu130（NeRF 参考实现；纯 CPU 亦可跑通演示）
+      - pytest>=7.4         # 单元测试（单点/全局，见各项目 DEBUG.md）
+      - pypdf>=6.19         # 论文标题校验等文档工具脚本
