@@ -10,6 +10,9 @@ venv/
 projects/nerf/logs/
 projects/nerf/data/
 
+# --- 论文库（本地资料，不上传 GitHub）---
+papers/
+
 # --- 文档生成 ---
 docs/
 *.log
