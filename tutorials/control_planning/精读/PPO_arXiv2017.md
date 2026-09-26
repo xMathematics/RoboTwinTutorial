@@ -178,7 +178,7 @@ $$
 **式 (9)——策略/价值共享参数时的组合损失**：
 
 $$
-L_t^{CLIP+VF+S}(\theta) = \hat{\mathbb{E}}_t\big[L_t^{CLIP}(\theta) - c_1 L_t^{VF}(\theta) + c_2 S[\pi_\theta](s_t)\big],\qquad L_t^{VF} = \big(V_\theta(s_t) - V^{targ}_t\big)^2,\tag{9}
+L_t^{CLIP+VF+S}(\theta) = \hat{\mathbb{E}}_t\big[L_t^{CLIP}(\theta) - c_1 L_t^{VF}(\theta) + c_2 S[\pi_\theta](`s_t`)\big],\qquad L_t^{VF} = \big(V_\theta(s_t) - V^{targ}_t\big)^2,\tag{9}
 $$
 
 $c_1, c_2$ 为系数，$S$ 为熵 bonus（鼓励探索，沿 Williams 1992 / [Mni+16] 的做法）。MuJoCo 基准不共享参数、不用熵 bonus（§6.1：$c_1$ 无关、无熵项）；Atari 用 Table 5：$c_1 = 1$、$c_2 = 0.01$。
