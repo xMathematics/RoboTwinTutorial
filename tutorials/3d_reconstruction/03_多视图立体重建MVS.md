@@ -104,7 +104,7 @@ $$\mathrm{NCC}(I,\ aI'+b) = \frac{a\sum_{\mathbf{p}}(I-\bar I)(I'-\bar I')}{\sqr
 
 **③ 选型理由（本章重点）**：手工与学习的分歧点在"正则从哪来"。替代 (a)——手工光度 + 手工正则（COLMAP 路线）：光度失效处（弱纹理、反射）NCC 本身无判别力，手工平滑假设（分段常值深度、各向同性）与真实几何无关，只能"猜平"——先验来自设计者而非数据；优点是无需训练、跨域稳。替代 (b)——在规则欧氏体素网格上做 3D 卷积（SurfaceNet 一类）：整场景立方体的开销随尺寸三次方增长，难以放大到开放场景。选择（MVSNet）：代价体建在**参考相机视锥**上（只在可能出现的深度区间采样），3D CNN 沿深度轴聚合上下文——"平滑先验"变成从数据学到的正则，弱纹理处网络靠上下文与数据先验补足 NCC 的信息真空，反射面靠训练分布中的相似外观修复。代价：显存 $O(HWD)$（正则前还有 $N$ 个体积为 $V=\frac{W}{4}\cdot\frac{H}{4}\cdot D\cdot F$ 的特征体），3D 卷积本身昂贵——$D$ 因此受限，需压缩通道（论文 32→8）、控制假设数或由粗到细分层。精度优先、有训练数据的场景值得；跨域开放场景仍是手工路线更稳。
 
-**④ 理论依据**：MVSNet（Yao et al., *"MVSNet: Depth Inference for Unstructured Multi-View Stereo"*, ECCV 2018；本地 [PDF](../../papers/3d_reconstruction/classics/arXiv-1804.02505_MVSNet.pdf)，其 Eq.1 / Eq.2 / Eq.4 即本章 (3.2) / (3.6) / (3.9)–(3.10)）；软 argmin 源自双目深度学习 GCNet（Kendall et al., *"End-to-End Learning of Geometry and Context for Deep Stereo Regression"*, ICCV 2017）；几何骨架是平面扫描（Collins, 1996，3.1 节）。
+**④ 理论依据**：MVSNet（Yao et al., *"MVSNet: Depth Inference for Unstructured Multi-View Stereo"*, ECCV 2018；本地 [PDF](../../papers/3d_reconstruction/classics/arXiv-1804.02505_MVSNet.pdf)，其 Eq.1 / Eq.2 / Eq.3 即本章 (3.2) / (3.6) / (3.9)–(3.10)（Eq.3 为含 softmax 的深度回归式，即软 argmin；Eq.4 为训练损失））；软 argmin 源自双目深度学习 GCNet（Kendall et al., *"End-to-End Learning of Geometry and Context for Deep Stereo Regression"*, ICCV 2017）；几何骨架是平面扫描（Collins, 1996，3.1 节）。
 
 **⑤ 完整推导**（每步注明依据）：
 
