@@ -50,6 +50,34 @@
         "cwd": "${workspaceFolder}/projects/nerf"
       },
       "problemMatcher": []
+    },
+    {
+      "label": "SLAM: 全局测试（pytest 全套件）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest projects/slam/tests -v",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "SLAM: 单点测试（当前文件 + 过滤）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} ${relativeFile} ${input:slamTestFilter}",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/slam"
+      },
+      "group": "test",
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "slamTestFilter",
+      "type": "promptString",
+      "description": "测试名子串（如 gate、hartley；留空 = 全部）",
+      "default": ""
     }
   ]
 }

@@ -7,9 +7,12 @@
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
-        "--config", "data/lego",
-        "--mode", "train",
-        "--exp", "lego_smoke",
+        "--config",
+        "data/lego",
+        "--mode",
+        "train",
+        "--exp",
+        "lego_smoke",
         "--tiny"
       ],
       "cwd": "${workspaceFolder}/projects/nerf",
@@ -22,10 +25,14 @@
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
-        "--config", "data/lego",
-        "--mode", "train",
-        "--exp", "lego_full",
-        "--steps", "200000"
+        "--config",
+        "data/lego",
+        "--mode",
+        "train",
+        "--exp",
+        "lego_full",
+        "--steps",
+        "200000"
       ],
       "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
@@ -37,10 +44,14 @@
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
-        "--config", "data/lego",
-        "--mode", "test",
-        "--exp", "lego_full",
-        "--ckpt", "logs/lego_full/latest.pt"
+        "--config",
+        "data/lego",
+        "--mode",
+        "test",
+        "--exp",
+        "lego_full",
+        "--ckpt",
+        "logs/lego_full/latest.pt"
       ],
       "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
@@ -52,11 +63,16 @@
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
-        "--config", "data/lego",
-        "--mode", "render",
-        "--exp", "lego_full",
-        "--ckpt", "logs/lego_full/latest.pt",
-        "--frames", "120"
+        "--config",
+        "data/lego",
+        "--mode",
+        "render",
+        "--exp",
+        "lego_full",
+        "--ckpt",
+        "logs/lego_full/latest.pt",
+        "--frames",
+        "120"
       ],
       "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
@@ -70,6 +86,60 @@
       "cwd": "${fileDirname}",
       "console": "integratedTerminal",
       "justMyCode": true
+    },
+    {
+      "name": "SLAM: 全局测试（pytest 全套件）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "projects/slam/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "SLAM: 单点测试（当前文件 + 测试名过滤）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "args": [
+        "${input:testFilter}"
+      ],
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "SLAM: 单点示例｜FastSLAM 门控关联（test_fastslam.py nn）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/slam/tests/test_fastslam.py",
+      "args": [
+        "nn"
+      ],
+      "cwd": "${workspaceFolder}/projects/slam",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "SLAM: VI 尺度恢复测试（test_vins.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/slam/tests/test_vins.py",
+      "cwd": "${workspaceFolder}/projects/slam",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    }
+  ],
+  "inputs": [
+    {
+      "id": "testFilter",
+      "type": "promptString",
+      "description": "测试名子串（如 hartley、gate；留空 = 全部测试）",
+      "default": ""
     }
   ]
 }
