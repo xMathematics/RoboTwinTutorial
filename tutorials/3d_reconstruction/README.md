@@ -1,7 +1,7 @@
 # 3D 重建 — 教程架构
 
 > **主题**：3D Reconstruction（从二维图像恢复三维结构与外观）
-> **状态**：10 章全部完成 ｜ 主线论文：COLMAP、KinectFusion、MVSNet、DeepSDF、NeuS、3DGS、DUSt3R
+> **状态**：10 章全部完成 ｜ **论文精读**：13 篇逐篇精读见 [精读/](精读/README.md) ｜ 主线论文：COLMAP、KinectFusion、MVSNet、DeepSDF、NeuS、3DGS、DUSt3R
 
 本文件是 3D 重建教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
 后续各章按 [CONSTRAINTS.md §3.4](../../CONSTRAINTS.md) 五步法
@@ -174,6 +174,9 @@
 - 记号：相机内参 $K$、世界→相机变换 $T_{cw} \in SE(3)$、SDF $s(\mathbf{x})$（表面为 0，外部为正）、占据 $o(\mathbf{x}) \in [0,1]$
 
 ## 资源
+
+**论文精读**：papers/3d_reconstruction/ 收录的 12 篇论文 + MapAnything 源码包已逐篇精读
+（含关键公式推导与原文式号核对），入口见 [精读/README.md](精读/README.md)。
 
 - 论文库：[papers/3d_reconstruction/](../../papers/3d_reconstruction/README.md)（经典 7 篇 + 前沿 5 篇 + 源码包）
 - 相关主题：[SLAM](../slam/README.md)（位姿估计）｜ [NeRF](../nerf/README.md)（神经渲染起点）｜ [RoboTwin](../robotwin/README.md)（仿真与抓取落地）
