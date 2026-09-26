@@ -24,6 +24,14 @@
 - **environment.yml**：Anaconda 环境配置清单（llm_env：python 3.10 / torch 2.11 / numpy 2.2 / pytest / pypdf）
 - 全部测试文件主入口支持单点过滤（`python tests/test_X.py <子串>`）
 
+### 新增（论文精读系列，38 篇）
+- **SLAM 18 篇**：`tutorials/slam/精读/`——经典 11 + 前沿 7，逐篇含关键公式推导（实读 PDF 核对式号；含 DSO 式(15)/DROID 式(7)(8)(14)/VINS 式(5) 等原论文排印勘误注）
+- **3D 重建 13 篇**：`tutorials/3d_reconstruction/精读/`——COLMAP×2/MVSNet/Poisson/ONet/DeepSDF/NeuS/Neuralangelo/Instant-NGP/3DGS/DUSt3R/MASt3R/MapAnything（MVSNet/NeuS 与 LaTeX 源码双重核对）
+- **RoboTwin 11 篇**：`tutorials/robotwin/精读/`——RoboTwin 双基准 + RT-1/Diffusion Policy/ACT/RT-2/OXE/OpenVLA/π0/RDT/DexGraspNet
+- **控制规划 9 篇**：`tutorials/control_planning/精读/`——RRT/RRT*（Theorem 15–71 全核）/CBF 综述/PETS/Crocoddyl/MPNet/PPO/SAC/RapidLocomotion
+- **NeRF 1 篇**：`tutorials/nerf/精读/`——基于 LaTeX 源码逐式核对（论文仅 6 个编号式）+ 论文↔教程↔代码三方映射表
+- 各主题 `精读/README.md` 总索引（按管线/谱系分组 + 阅读顺序 + 跨主题衔接）
+
 ### 变更
 - `papers/` 加入 `.gitignore`：论文仅本地研读，不上传 GitHub（误推送的一个论文提交已强制覆盖移除）
 
