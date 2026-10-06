@@ -20,3 +20,8 @@ dependencies:
       - torch>=2.5          # 本机实测 2.11.0+cu130（NeRF 参考实现；纯 CPU 亦可跑通演示）
       - pytest>=7.4         # 单元测试（单点/全局，见各项目 DEBUG.md）
       - pypdf>=6.19         # 论文标题校验等文档工具脚本
+      # 以下为 projects/nerf 参考实现额外依赖（与 projects/nerf/requirements.txt 同步）
+      - Pillow>=9.0         # 图像读写（demo 数据生成与 Blender 数据加载）
+      - imageio>=2.25       # 图像/视频帧读写（渲染输出）
+      - scipy>=1.10         # 变换工具（Blender 数据的 pose 处理）
+      - tqdm>=4.65          # 训练进度条

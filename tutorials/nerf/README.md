@@ -3,8 +3,9 @@
 > **适用对象**：具备基础线性代数、微积分与 Python 知识，想系统理解 NeRF 论文与原理的学习者
 > **学习目标**：从零理解「神经辐射场表示」「体积渲染」「位置编码」「层次采样」四大核心概念，读懂论文所有公式与表格，并能读懂/运行配套参考实现
 > **配套论文**：*NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis*（Mildenhall et al., ECCV 2020，最佳论文提名）
-> **论文源码**：`../paper/latex/arxiv_submission.tex`
-> **参考实现**：`../code/`
+> **论文源码**：[LaTeX 完整源码](../../papers/nerf/latex/arxiv_submission.tex)
+> **参考实现**：[projects/nerf/](../../projects/nerf/README.md)
+> **主题总览**：[OVERVIEW.md](OVERVIEW.md) ｜ **论文逐式精读**：[精读/NeRF_ECCV2020.md](精读/NeRF_ECCV2020.md)
 
 ---
 

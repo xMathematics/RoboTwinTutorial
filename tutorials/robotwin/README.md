@@ -3,6 +3,7 @@
 > **适用对象**：完全没有机器人学、强化学习或深度学习背景的零基础学习者
 > **学习目标**：从零理解「具身智能」「双臂机器人操作」「仿真到现实迁移」，并能上手 RoboTwin 2.0 框架进行数据采集与策略训练
 > **配套论文**：*RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation*（arXiv:2506.18088）
+> **主题总览**：[OVERVIEW.md](OVERVIEW.md) ｜ **论文精读**：[11 篇](精读/README.md)（RoboTwin 双基准 + RT-1/ACT/扩散策略/OpenVLA/π0/RDT 等）
 
 ---
 

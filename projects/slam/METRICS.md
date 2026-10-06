@@ -215,7 +215,10 @@ cd projects/slam
 python3 tests/test_metrics.py scale
 # 预期输出（节选）：
 # [scale] 0.62x scaled traj -> ratio 0.620000
-# 2/2 tests passed.
+# PASS test_scale_ratio_uniform_scaling_and_naive
+# PASS test_umeyama_rigid_recovery_without_scale    ← 名字同样含 "scale"，一并命中
+# PASS test_umeyama_with_scale_recovery
+# 4/4 tests passed.
 python3 tests/test_vins.py pure_visual   # 实测对照：纯视觉尺度塌缩到 0.38-0.42
 ```
 

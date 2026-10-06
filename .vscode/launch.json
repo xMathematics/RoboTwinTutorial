@@ -2,25 +2,52 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "NeRF: 训练 (tiny 冒烟)",
+      "name": "NeRF: 训练 (tiny 冒烟, demo_scene 开箱即跑)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
       "args": [
         "--config",
-        "data/lego",
+        "data/demo_scene",
         "--mode",
         "train",
         "--exp",
-        "lego_smoke",
-        "--tiny"
+        "demo_smoke",
+        "--tiny",
+        "--steps",
+        "80"
       ],
       "cwd": "${workspaceFolder}/projects/nerf",
       "console": "integratedTerminal",
       "justMyCode": true
     },
     {
-      "name": "NeRF: 训练 (全量)",
+      "name": "NeRF: 全局测试（pytest 全套件 15 项）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "projects/nerf/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "NeRF: 单点测试（当前文件 + 测试名过滤）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "args": [
+        "${input:testFilter}"
+      ],
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "NeRF: 训练 (全量, 需先下载 lego 数据)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
@@ -39,7 +66,7 @@
       "justMyCode": true
     },
     {
-      "name": "NeRF: 测试 (PSNR/SSIM)",
+      "name": "NeRF: 测试 (PSNR/SSIM, 需 lego 全量训练产物)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
@@ -58,7 +85,7 @@
       "justMyCode": true
     },
     {
-      "name": "NeRF: 渲染相机轨迹",
+      "name": "NeRF: 渲染相机轨迹 (需 lego 全量训练产物)",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/projects/nerf/run_nerf.py",
@@ -88,7 +115,16 @@
       "justMyCode": true
     },
     {
-      "name": "SLAM: 全局测试（pytest 全套件）",
+      "name": "SLAM: 核心入口（FastSLAM 冒烟演示 demo.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/slam/demo.py",
+      "cwd": "${workspaceFolder}/projects/slam",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "SLAM: 全局测试（pytest 全套件 80 项）",
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",
@@ -113,12 +149,12 @@
       "justMyCode": true
     },
     {
-      "name": "SLAM: 单点示例｜FastSLAM 门控关联（test_fastslam.py nn）",
+      "name": "SLAM: 单点示例｜FastSLAM 门控关联（test_fastslam.py gat）",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/projects/slam/tests/test_fastslam.py",
       "args": [
-        "nn"
+        "gat"
       ],
       "cwd": "${workspaceFolder}/projects/slam",
       "console": "integratedTerminal",
@@ -138,7 +174,7 @@
     {
       "id": "testFilter",
       "type": "promptString",
-      "description": "测试名子串（如 hartley、gate；留空 = 全部测试）",
+      "description": "测试名子串（如 hartley、gat；留空 = 全部测试；无匹配会列出可用测试名）",
       "default": ""
     }
   ]

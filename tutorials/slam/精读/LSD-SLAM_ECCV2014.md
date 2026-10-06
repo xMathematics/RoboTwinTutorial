@@ -174,7 +174,7 @@ $$\sigma^2_{r_d}(\mathbf{p}, \boldsymbol{\xi}_{j·i}) := V_j([\mathbf{p}']_{1,2}
 
 $$e(\boldsymbol{\xi}_{j_k i}, \boldsymbol{\xi}_{i j_k}) := (\boldsymbol{\xi}_{j_k i} \circ \boldsymbol{\xi}_{i j_k})^T \Big( \boldsymbol{\Sigma}_{j_k i} + \mathrm{Adj}_{j_k i}\, \boldsymbol{\Sigma}_{i j_k}\, \mathrm{Adj}_{j_k i}^T \Big)^{-1} (\boldsymbol{\xi}_{j_k i} \circ \boldsymbol{\xi}_{i j_k}) \tag{20}$$
 
-足够小才入图。推导逻辑：两次独立估计都无偏时，复合 $\boldsymbol{\xi}_{j_k i} \circ \boldsymbol{\xi}_{i j_k} \approx$ 恒等元；其偏差的协方差是两者之和——$\boldsymbol{\Sigma}_{i j_k}$ 定义在与 $\boldsymbol{\xi}_{j_k i}$ 不同的切空间，须经**伴随** $\mathrm{Adj}_{j_k i}$ 搬运（依据：Eq.(11) 穿过复合映射的雅可比即伴随，论文原话 "the adjoint $\mathrm{Adj}_{j_k i}$ is used to transform $\boldsymbol{\Sigma}_{i j_k}$ into the correct tangent space"）；马氏范数即一致性检验统计量（教程第 09 章 9.2 的"几何校验"思想，这里换成概率版）。此外论文 §3.5 给出**扩大收敛半径**的两个手段：ESM 二阶最小化（[3]，不提精度、只扩半径）与极低分辨率由粗到精（起点低至 $20 \times 15$ 像素）——§4.3 实验验证它们只扩大收敛半径、不改变收敛后的精度。
+足够小才入图。推导逻辑：两次独立估计都无偏时，复合 $\boldsymbol{\xi}_{j_k i} \circ \boldsymbol{\xi}_{i j_k} \approx$ 恒等元；其偏差的协方差是两者之和——$\boldsymbol{\Sigma}_{i j_k}$ 定义在与 $\boldsymbol{\xi}_{j_k i}$ 不同的切空间，须经**伴随** $\mathrm{Adj}_{j_k i}$ 搬运（依据：Eq.(11) 穿过复合映射的雅可比即伴随，论文原话 "the adjoint $\mathrm{Adj}_{j_k i}$ is used to transform $\boldsymbol{\Sigma}_{i j_k}$ into the correct tangent space"）；马氏范数即一致性检验统计量（教程第 09 章 09.2 的"几何校验"思想，这里换成概率版）。此外论文 §3.5 给出**扩大收敛半径**的两个手段：ESM 二阶最小化（[3]，不提精度、只扩半径）与极低分辨率由粗到精（起点低至 $20 \times 15$ 像素）——§4.3 实验验证它们只扩大收敛半径、不改变收敛后的精度。
 
 ### 4.6 Sim(3) 位姿图优化（论文 Eq.(21)）
 
@@ -197,7 +197,7 @@ $$E(\boldsymbol{\xi}_{W1} \dots \boldsymbol{\xi}_{WN}) := \sum_{(\boldsymbol{\xi
 
 **局限**（论文自述 + 结构性分析）：
 
-1. **无全局 BA**：地图优化只是关键帧**位姿图**（Eq.(21)），深度图在关键帧入图后不再参与全局联合优化（"once a keyframe is replaced as tracking reference... it will not be refined further"，§3.1）——路标级几何误差无法像 BA 那样被重线性化吸收，两次回环之间尺度漂移仍会累积（对照教程第 09 章 9.3：位姿图 ≈ 边缘化路标后的等效问题，精度略低于全局 BA）。DSO 的滑窗光度 BA 正是对这一缺口的结构性回应。
+1. **无全局 BA**：地图优化只是关键帧**位姿图**（Eq.(21)），深度图在关键帧入图后不再参与全局联合优化（"once a keyframe is replaced as tracking reference... it will not be refined further"，§3.1）——路标级几何误差无法像 BA 那样被重线性化吸收，两次回环之间尺度漂移仍会累积（对照教程第 09 章 09.3：位姿图 ≈ 边缘化路标后的等效问题，精度略低于全局 BA）。DSO 的滑窗光度 BA 正是对这一缺口的结构性回应。
 2. **光度模型极简**：假设灰度恒常，不建模响应函数、渐晕与曝光时间（对照 DSO 论文 Eq.(2)-(3) 的完整标定）——曝光/自动增益变化只能靠 Huber 与方差归一化"容忍"（教程 06.3 ③ 的"回避"路线），快速曝光变化时易跟踪失败。
 3. **对快速运动敏感**：光度误差非凸、收敛半径有限（§3.5、§4.3）；TUM 实验明确列出运动模糊与 rolling shutter 为失效源（§4.2），需靠极粗层金字塔 + ESM 扩半径。
 4. **半稠密边界**：弱纹理区域内部（白墙中心）依旧无深度（梯度门的天性，教程 06.1 第五步）；初始化依赖"随机深度 + 大方差"的自举（§3.1），论文自认其收敛性未做系统评估。

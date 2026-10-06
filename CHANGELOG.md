@@ -7,49 +7,88 @@
 
 ## [Unreleased]
 
+### 修复（全库查缺补漏）
+
+- 根 README / CHANGELOG 计数与状态勘误：精读总数 38→**52**（18+13+11+9+1）、
+  projects/slam 测试数 95→**80**（95 为双项目之和，nerf 为 15）、SLAM 经典论文 10→**11 篇**
+  （补计 Cadena 综述）；`tutorials/3d_reconstruction` 与 `control_planning` 的"写作中"状态更新为十章完结
+- 修复 GitHub Actions 自动提交工作流**永不提交**的缺陷（检查步骤未写 `$GITHUB_OUTPUT`，
+  下游条件恒假）：改为 bash 直检 `git status --porcelain` 并正确声明步骤输出；
+  补 `permissions: contents: write`；移除未使用的 Python / gitpython 依赖与 status.json 中转文件
+- 修复 `scripts/auto_commit.sh` 提交信息生成缺陷（`echo | while read` 管道进子 shell 导致
+  文件清单丢失、双引号内 `\n` 为字面量）：改用临时文件 + `printf` 逐行拼接，
+  产出与 scripts/README.md 文档一致的"新增文件/修改文件"格式
+- `.vscode/` 对齐 §4.5/§4.8：launch.json 补齐 **NeRF 全局/单点测试**与 **SLAM 核心入口**
+  调试配置（新增 `projects/slam/demo.py` 冒烟演示）；tasks.json 补 NeRF 单点任务并将
+  "运行核心测试"升级为全局测试（pytest tests/）；NeRF 冒烟配置改用开箱即得的
+  `data/demo_scene`（全量训练仍用 `data/lego`，获取方式见 DEBUG.md）
+- 索引与导航补全：projects/README.md 补 **slam 条目与快速开始**；tutorials/README.md 表格
+  补精读列；各主题 README 补 OVERVIEW / 精读入口；新建 `tutorials/robotwin/OVERVIEW.md`
+  （此前唯一缺主题总览的主题）与 `papers/nerf/README.md`
+- 修复目录重构遗留的失效相对路径：`tutorials/nerf/README.md`、`nerf/08`、`nerf/09` 的
+  `../paper`、`../code/`；`projects/nerf/README.md` 的 `../tutorial/`；
+  `projects/nerf/METRICS.md` 的 `../tutorials/...`（7 处，均应为 `../../` 两级）
+- 测试文档与实际输出对齐（实测核验）：slam DEBUG/TUTORIAL 的 `gate` 单点示例 3/3→**1/1**、
+  无匹配示例由 `gat`（实匹配 2 个）改为 `zzz`、launch.json 单点示例 `nn`（实无匹配）→`gat`、
+  METRICS.md `scale` 示例 2/2→**4/4**、slam README 变量表计数 40→**36 条**
+- 纯操作章节（nerf 08/09、robotwin 07/08）开头补注"操作步骤，不含理论"（§3.4 豁免声明）
+- environment.yml 补录 NeRF 额外依赖（Pillow / imageio / scipy / tqdm，与
+  projects/nerf/requirements.txt 同步），torch 下界对齐为 `>=2.5`
+- cron 时区描述更正（README / scripts/README / workflow 注释）：`0 9 * * 1` 为
+  **UTC 周一 09:00 = 北京时间周一 17:00**
+- 勘正本文件原"误推送的论文提交已强制覆盖移除"的失实表述：论文 PDF 当时以**普通提交**
+  从工作树移除（8f1910a，非历史重写），早期提交中的论文文件仍留在 git 历史中；
+  如需彻底清除须 `git filter-repo` 重写历史并强推（待决策）
+
+## [2.0.0] - 2026-09-27
+
+按资源类型重构目录结构（不兼容变更，版本号依 §8.1 升 MAJOR）；新增三大主题教程、
+52 篇论文精读、SLAM 教学实现与双项目测评体系。
+
 ### 新增
+
 - 全局约束文档 (CONSTRAINTS.md)
 - 变更日志 (CHANGELOG.md)
 - 文档规范新增 §3.4「论述结构规范（问题导向五步法）」：核心知识点必须按"问题场景 → 解决方法 → 选型理由 → 理论依据 → 完整推导"展开，推导禁止跳步；附 NeRF 体积渲染完整示范与检查清单项
 - SLAM 教程架构文档：10 章规划，每章预埋问题场景锚点与推导产出清单，含学习路径依赖图与资源清单
-- SLAM 论文库 `papers/slam/`：经典 10 篇（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono）+ 前沿 7 篇（DROID-SLAM、NeRF-SLAM、GS-SLAM、SplaTAM、MonoGS、MASt3R-SLAM、VGGT-GS SLAM），全部校验 PDF 完整性；分类索引含入选理由与教程章节映射
+- SLAM 论文库 `papers/slam/`：经典 11 篇（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono、SLAM 权威综述）+ 前沿 7 篇（DROID-SLAM、NeRF-SLAM、GS-SLAM、SplaTAM、MonoGS、MASt3R-SLAM、VGGT-GS SLAM），全部校验 PDF 完整性；分类索引含入选理由与教程章节映射
 - **教程三主题十章完结**：SLAM 10 章（滤波/图优化/回环/VIO 预积分全覆盖，五步法）、3D 重建架构 + 10 章（SfM/MVS/TSDF/Poisson/DeepSDF/NeuS/3DGS/前馈重建/机器人选型）、控制与规划新主题架构 + 10 章（RRT*/iLQR/MPC/阻抗控制/CBF/PPO/SAC/学习式前沿/全栈衔接）
 - **新增第五主题 control_planning**：本地论文 9 篇（RRT、RRT*、CBF 综述、Crocoddyl、PETS、MPNet、PPO、SAC、Rapid Locomotion，git 排除）+ 教程十章
 - **论文库扩容（仅本地，`papers/` 已加入 .gitignore 不上传）**：`papers/3d_reconstruction/` 12 篇 + MapAnything 源码包；`papers/robotwin/` 11 篇；全部 arXiv 论文 LaTeX 源码包 43 套；所有 PDF 逐篇标题验证
-- **projects/slam/**：SLAM 论文教学实现——core（李群/相机/GN-LM）+ 9 个论文模块（fastslam/epipolar/bowloop/direct/photoba/loam2d/preint/vins/droidlite）+ metrics.py（Umeyama ATE/旋转误差/尺度比/RPE），95 项测试双环境全绿；纯注释改动经 AST 级核验
+- **projects/slam/**：SLAM 论文教学实现——core（李群/相机/GN-LM）+ 9 个论文模块（fastslam/epipolar/bowloop/direct/photoba/loam2d/preint/vins/droidlite）+ metrics.py（Umeyama ATE/旋转误差/尺度比/RPE），80 项测试双环境全绿（另 projects/nerf 15 项）；纯注释改动经 AST 级核验
 - **双项目统一测评**：metrics.py + METRICS.md（§4.7：作用/如何计算/健康值范围/如何运行）
 - **双项目零基础导读**：TUTORIAL.md（§4.4 七段结构，代码片段逐段实跑）与 DEBUG.md（§4.5：单点/全局测试、重点观察变量表、实战调试案例）
 - **全局约束扩展**：§4.3 代码中文注释（变量含义/作用/函数流水线）、§4.4 TUTORIAL.md、§4.5 DEBUG.md + launch.json、§4.6 Anaconda 环境清单、§4.7 测评指标、§4.8 VS Code 统一配置
-- **VS Code 统一**：settings.json 写入 conda llm_env 解释器并覆盖全项目；launch.json 9 条调试配置（含单点测试交互过滤）；tasks.json 7 条任务；`.vscode/SETUP.md` 配置教程
+- **VS Code 统一**：settings.json 写入 conda llm_env 解释器并覆盖全项目；launch.json 调试配置（含单点测试交互过滤）；tasks.json 测试任务；`.vscode/SETUP.md` 配置教程
 - **environment.yml**：Anaconda 环境配置清单（llm_env：python 3.10 / torch 2.11 / numpy 2.2 / pytest / pypdf）
 - 全部测试文件主入口支持单点过滤（`python tests/test_X.py <子串>`）
-
-### 新增（论文精读系列，38 篇）
-- **SLAM 18 篇**：`tutorials/slam/精读/`——经典 11 + 前沿 7，逐篇含关键公式推导（实读 PDF 核对式号；含 DSO 式(15)/DROID 式(7)(8)(14)/VINS 式(5) 等原论文排印勘误注）
-- **3D 重建 13 篇**：`tutorials/3d_reconstruction/精读/`——COLMAP×2/MVSNet/Poisson/ONet/DeepSDF/NeuS/Neuralangelo/Instant-NGP/3DGS/DUSt3R/MASt3R/MapAnything（MVSNet/NeuS 与 LaTeX 源码双重核对）
-- **RoboTwin 11 篇**：`tutorials/robotwin/精读/`——RoboTwin 双基准 + RT-1/Diffusion Policy/ACT/RT-2/OXE/OpenVLA/π0/RDT/DexGraspNet
-- **控制规划 9 篇**：`tutorials/control_planning/精读/`——RRT/RRT*（Theorem 15–71 全核）/CBF 综述/PETS/Crocoddyl/MPNet/PPO/SAC/RapidLocomotion
-- **NeRF 1 篇**：`tutorials/nerf/精读/`——基于 LaTeX 源码逐式核对（论文仅 6 个编号式）+ 论文↔教程↔代码三方映射表
-- 各主题 `精读/README.md` 总索引（按管线/谱系分组 + 阅读顺序 + 跨主题衔接）
+- **论文精读系列（52 篇）**：
+  - **SLAM 18 篇**：`tutorials/slam/精读/`——经典 11 + 前沿 7，逐篇含关键公式推导（实读 PDF 核对式号；含 DSO 式(15)/DROID 式(7)(8)(14)/VINS 式(5) 等原论文排印勘误注）
+  - **3D 重建 13 篇**：`tutorials/3d_reconstruction/精读/`——COLMAP×2/MVSNet/Poisson/ONet/DeepSDF/NeuS/Neuralangelo/Instant-NGP/3DGS/DUSt3R/MASt3R/MapAnything（MVSNet/NeuS 与 LaTeX 源码双重核对）
+  - **RoboTwin 11 篇**：`tutorials/robotwin/精读/`——RoboTwin 双基准 + RT-1/Diffusion Policy/ACT/RT-2/OXE/OpenVLA/π0/RDT/DexGraspNet
+  - **控制规划 9 篇**：`tutorials/control_planning/精读/`——RRT/RRT*（Theorem 15–71 全核）/CBF 综述/PETS/Crocoddyl/MPNet/PPO/SAC/RapidLocomotion
+  - **NeRF 1 篇**：`tutorials/nerf/精读/`——基于 LaTeX 源码逐式核对（论文仅 6 个编号式）+ 论文↔教程↔代码三方映射表
+  - 各主题 `精读/README.md` 总索引（按管线/谱系分组 + 阅读顺序 + 跨主题衔接）
 
 ### 变更
-- `papers/` 加入 `.gitignore`：论文仅本地研读，不上传 GitHub（误推送的一个论文提交已强制覆盖移除）
+
+- `papers/` 加入 `.gitignore`：论文仅本地研读，不上传 GitHub（论文文件随后以普通提交移出工作树；早期提交中的论文文件仍保留在 git 历史中，彻底清除需重写历史，见 Unreleased 勘误）
+- **项目重构**：按资源类型重新划分目录——`papers/`（论文库）、`tutorials/`（教程文档）、`projects/`（代码项目），原 `nerf/`、`robotwin/`、`slam/`、`3d_reconstruction/` 按主题拆分归入三类
+- 同步更新根 README、各索引 README、`.vscode/` 配置、`.gitignore` 及 CONSTRAINTS.md
+- 全部项目代码注释中文化（模块流水线/变量含义/推导依据，AST 级核验零逻辑改动）
 
 ### 修复
+
 - 6 个张冠李戴的 arXiv PDF（NeuS、LSD-SLAM、MVSNet、MASt3R、DexGraspNet、RoboTwin 1.0），逐篇以 PDF 首页标题核对并改为正确编号
 - SLAM 教程第 09 章 BoW 评分公式端点（s∈[1/2,1]，与 DBoW2 及代码实现一致）
 - test_droidlite 的 numpy 2.x 容差（Schur 交叉验证 1e-5，双环境通过）
 - photoba LM λ 塌缩 bug（Nielsen 增益比 + 逆深度物理箱）
 - projects/nerf 内联 PSNR/SSIM 抽取至 nerf/metrics.py（语义逐位一致）
 
-### 变更
-- **项目重构**：按资源类型重新划分目录——`papers/`（论文库）、`tutorials/`（教程文档）、`projects/`（代码项目），原 `nerf/`、`robotwin/`、`slam/`、`3d_reconstruction/` 按主题拆分归入三类
-- 同步更新根 README、各索引 README、`.vscode/` 配置、`.gitignore` 及 CONSTRAINTS.md
-- 全部项目代码注释中文化（模块流水线/变量含义/推导依据，AST 级核验零逻辑改动）
-
 ## [1.0.0] - 2026-09-25
 
 ### 新增
+
 - NeRF 模块基础教程
 - RoboTwin2.0 模块教程
 - SLAM 模块教程
@@ -57,6 +96,7 @@
 - 项目全局文档结构
 
 ### 文档
+
 - 各模块 README
 - 各模块教程文档
 - 全局约束规范
@@ -67,6 +107,10 @@
 
 ### [Unreleased] - 开发中
 当前开发版本，包含未发布的新功能和变更。
+
+### [2.0.0] - 目录重构 + 三主题教程 + 52 篇精读
+按 papers/tutorials/projects 三类重构目录（不兼容）；新增 3D 重建、控制与规划两主题教程、
+SLAM 教学实现（80 项测试）、双项目 TUTORIAL/DEBUG/METRICS 体系与 VS Code 统一配置。
 
 ### [1.0.0] - 初始版本
 项目初始发布版本，包含所有基础模块和文档。

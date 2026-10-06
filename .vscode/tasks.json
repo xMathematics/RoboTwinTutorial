@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "NeRF: 运行核心测试",
+      "label": "NeRF: 全局测试（pytest 全套件 15 项）",
       "type": "shell",
-      "command": "${command:python.interpreterPath} tests/test_core.py",
+      "command": "${command:python.interpreterPath} -m pytest tests -v",
       "options": {
         "cwd": "${workspaceFolder}/projects/nerf"
       },
@@ -15,16 +15,26 @@
       "problemMatcher": []
     },
     {
-      "label": "NeRF: 训练 (tiny 冒烟)",
+      "label": "NeRF: 单点测试（当前文件 + 过滤）",
       "type": "shell",
-      "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_smoke --tiny",
+      "command": "${command:python.interpreterPath} ${relativeFile} ${input:nerfTestFilter}",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/nerf"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "NeRF: 训练 (tiny 冒烟, demo_scene 开箱即跑)",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} run_nerf.py --config data/demo_scene --mode train --exp demo_smoke --tiny --steps 80",
       "options": {
         "cwd": "${workspaceFolder}/projects/nerf"
       },
       "problemMatcher": []
     },
     {
-      "label": "NeRF: 训练 (全量 200k 步)",
+      "label": "NeRF: 训练 (全量 200k 步, 需先下载 lego 数据)",
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode train --exp lego_full --steps 200000",
       "options": {
@@ -34,7 +44,7 @@
       "problemMatcher": []
     },
     {
-      "label": "NeRF: 测试 (PSNR/SSIM)",
+      "label": "NeRF: 测试 (PSNR/SSIM, 需 lego 训练产物)",
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode test --exp lego_full --ckpt logs/lego_full/latest.pt",
       "options": {
@@ -43,7 +53,7 @@
       "problemMatcher": []
     },
     {
-      "label": "NeRF: 渲染相机轨迹视频帧",
+      "label": "NeRF: 渲染相机轨迹视频帧 (需 lego 训练产物)",
       "type": "shell",
       "command": "${command:python.interpreterPath} run_nerf.py --config data/lego --mode render --exp lego_full --ckpt logs/lego_full/latest.pt --frames 120",
       "options": {
@@ -52,7 +62,16 @@
       "problemMatcher": []
     },
     {
-      "label": "SLAM: 全局测试（pytest 全套件）",
+      "label": "SLAM: 核心入口（FastSLAM 冒烟演示 demo.py）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} demo.py",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/slam"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "SLAM: 全局测试（pytest 全套件 80 项）",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest projects/slam/tests -v",
       "options": {
@@ -77,6 +96,12 @@
       "id": "slamTestFilter",
       "type": "promptString",
       "description": "测试名子串（如 gate、hartley；留空 = 全部）",
+      "default": ""
+    },
+    {
+      "id": "nerfTestFilter",
+      "type": "promptString",
+      "description": "测试名子串（如 volume_render、ssim；留空 = 全部）",
       "default": ""
     }
   ]

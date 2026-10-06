@@ -18,6 +18,9 @@ python -c "import numpy; print('numpy', numpy.__version__)"        # 预期: num
 
 # ③ 运行核心库测试（李群李代数/相机/求解器，11 个测试）
 python tests/test_core_slam.py
+
+# ④ 核心入口冒烟演示（FastSLAM，确定性输出，秒级）
+python demo.py
 ```
 
 - **全局测试**：`python -m pytest tests/ -v`（80 个测试，llm_env 约 9.5s）
@@ -81,7 +84,7 @@ print(round(rmse, 3), "m")   # 实测 0.221 m；纯航位推算 ~1.57 m
 projects/slam/
 ├── README.md            # 本文件
 ├── TUTORIAL.md          # 零基础代码导读（必读入口）
-├── DEBUG.md             # 调试与测试教程（40 条重点观察变量表）
+├── DEBUG.md             # 调试与测试教程（36 条重点观察变量表）
 ├── METRICS.md           # 测评指标教程（ATE/RPE/尺度比 …）
 ├── metrics.py           # 统一测评模块
 ├── core|fastslam|epipolar|bowloop|direct|photoba|loam2d|preint|vins|droidlite/

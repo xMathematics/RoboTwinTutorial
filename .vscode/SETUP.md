@@ -14,15 +14,16 @@
    所有配置都按"工作区=仓库根"写好，从子目录打开会失效。
 3. 首次打开会提示"是否安装推荐扩展"（来自 `.vscode/extensions.json`），选**安装**：
    `ms-python.python`（Python 支持）、`ms-python.vscode-pylance`（静态分析）、
-   `ms-python.debugpy`（调试器）、`ms-python.black-formatter`（格式化）。
+   `ms-python.debugpy`（调试器）、`ms-python.black-formatter`（格式化）、
+   `ms-toolsai.jupyter`（笔记本支持，教程中零星用到）。
 
 ## 1. 四个配置文件各管什么
 
 | 文件 | 管什么 | 关键内容 |
 |------|--------|---------|
 | `settings.json` | **Anaconda 环境写入 VS Code**：默认解释器指向 conda `llm_env`、终端自动激活、pytest 测试发现范围、代码智能分析的搜索路径、保存时自动格式化 | `python.defaultInterpreterPath` = `/home/dzxu/anaconda3/envs/llm_env/bin/python` |
-| `launch.json` | **调试**：9 条调试配置（NeRF 训练/测试/渲染、SLAM 全局测试、SLAM 单点测试、两个代表性单点示例） | 见 §3 |
-| `tasks.json` | **任务**：7 条一键任务（核心测试、冒烟训练、SLAM 全局/单点测试等），`Terminal → Run Task` 调用 | 测试任务分组为 `test` |
+| `launch.json` | **调试**：12 条调试配置——NeRF 6 条（tiny 冒烟训练/全局测试/单点测试/全量训练/测试/渲染）、通用"当前文件"1 条、SLAM 5 条（核心入口 demo.py/全局测试/单点测试/两个代表性单点示例） | 见 §4 |
+| `tasks.json` | **任务**：9 条一键任务（NeRF 全局/单点测试、冒烟训练、SLAM 核心入口、SLAM 全局/单点测试等），`Terminal → Run Task` 调用 | 测试任务分组为 `test` |
 | `extensions.json` | 推荐扩展清单 | 打开仓库时自动提示 |
 
 **新增项目时的统一动作**：`settings.json` 的 `pytestArgs` / `extraPaths` / `PYTHONPATH`
@@ -47,18 +48,21 @@
 | 方式 | 操作 | 适用 |
 |------|------|------|
 | **Testing 侧栏**（推荐日常） | 左侧烧杯图标 → pytest 自动发现 `projects/{nerf,slam}/tests` → 点单个测试旁的 ▷ = **单点测试**；点文件/目录级 ▷ = 全局 | 改一个模块后快速验证；提交前跑全套 |
-| **任务** | `Terminal → Run Task` → `SLAM: 全局测试（pytest 全套件）` / `NeRF: 运行核心测试` / `SLAM: 单点测试（当前文件 + 过滤）`（会提示输入测试名子串，留空=全部） | 不想记命令 |
+| **任务** | `Terminal → Run Task` → `NeRF: 全局测试（pytest 全套件 15 项）` / `SLAM: 全局测试（pytest 全套件 80 项）` / `NeRF|SLAM: 单点测试（当前文件 + 过滤）`（会提示输入测试名子串，留空=全部） | 不想记命令 |
 | **终端命令** | 单点：`python tests/test_fastslam.py gate`（子串过滤，无匹配会列出可用测试名）；全局：`python -m pytest projects/slam/tests -v` 或逐文件直跑 | 远程/脚本场景 |
 
 **单点 vs 全局怎么选**：改了某个模块 → 先跑该模块的测试文件（或单点）；
-提交前 / 合并前 → 全局（nerf `tests/test_core.py` + slam `tests/` 全部）。
+提交前 / 合并前 → 全局（nerf 与 slam 各自 `tests/` 全部）。
 详见各项目 `DEBUG.md`。
 
 ## 4. 调试（launch.json 用法）
 
 - 左侧"运行和调试"（`Ctrl+Shift+D`）→ 顶部下拉选配置 → `F5` 启动。
-- **SLAM: 单点测试（当前文件 + 测试名过滤）**：打开任意 `tests/test_*.py` 后选它，
+- **NeRF / SLAM: 单点测试（当前文件 + 测试名过滤）**：打开任意 `tests/test_*.py` 后选它，
   F5 时会弹出输入框填测试名子串（如 `hartley`），在断点处停下后即可检查变量。
+- **NeRF: 训练 (tiny 冒烟)** 与 **SLAM: 核心入口（demo.py）** 开箱即跑（前者先用
+  `scripts/make_demo_data.py` 生成 `data/demo_scene`，后者无需数据）；
+  标注"需 lego"的 NeRF 配置要先下载 Blender lego 数据集（见 projects/nerf/DEBUG.md）。
 - 断点建议与**重点观察变量表**（每个模块调试时看什么、健康值是什么）：
   见 [projects/slam/DEBUG.md](../projects/slam/DEBUG.md) 与 [projects/nerf/DEBUG.md](../projects/nerf/DEBUG.md)。
 - `justMyCode` 默认 `true`（只在项目代码内停）；要单步进入 numpy/torch 内部时改为 `false`。
@@ -71,6 +75,7 @@
 | 运行 `run_nerf.py` 报 `No module named torch` | 解释器选错。`Python: Select Interpreter` 选 llm_env |
 | 终端没有 `(llm_env)` 前缀 | `settings.json` 的自动激活被关了；手动 `conda activate llm_env`，或重启终端 |
 | 单点测试提示"没有匹配的测试" | 子串写错——输出会列出全部可用测试名，照着选 |
+| NeRF 调试配置报找不到 `data/lego` | lego 是 Blender 官方数据，需先下载（见 projects/nerf/DEBUG.md）；开箱即跑请用 tiny 冒烟配置（`data/demo_scene`，先跑 `scripts/make_demo_data.py`） |
 | `import` 项目内包标红线 | VS Code 窗口需重载（`Developer: Reload Window`）让 `extraPaths` 生效 |
 | 保存后代码被重排 | `black-formatter` 在保存时格式化（ruler=88）；属预期行为，不要手写超 88 列 |
 

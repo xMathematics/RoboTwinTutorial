@@ -24,21 +24,26 @@ RoboTwinTutorial/
 │
 ├── tutorials/              ★ 教程文档（按主题分目录，中文）
 │   ├── README.md           教程总导航
-│   ├── nerf/               NeRF 10 章教程 + OVERVIEW 主题总览
-│   ├── robotwin/           RoboTwin 2.0 10 章教程
-│   ├── slam/               SLAM 10 章教程 + OVERVIEW
-│   ├── 3d_reconstruction/  3D 重建（写作中）
-│   └── control_planning/   控制与规划（写作中）
+│   ├── nerf/               NeRF 10 章教程 + OVERVIEW + 精读 1 篇
+│   ├── robotwin/           RoboTwin 2.0 10 章教程 + OVERVIEW + 精读 11 篇
+│   ├── slam/               SLAM 10 章教程 + OVERVIEW + 精读 18 篇
+│   ├── 3d_reconstruction/  3D 重建 10 章教程 + OVERVIEW + 精读 13 篇
+│   └── control_planning/   控制与规划 10 章教程 + OVERVIEW + 精读 9 篇
+│                           （各主题 精读/ 子目录 = 52 篇论文逐篇精读笔记）
 │
 ├── projects/               ★ 代码项目（可运行参考实现）
 │   ├── README.md           项目索引与快速开始
-│   ├── nerf/               NeRF PyTorch 教学版（8/8 单元测试通过）
-│   └── slam/               SLAM 论文教学实现（core/fastslam/epipolar/bowloop/...）
+│   ├── nerf/               NeRF PyTorch 教学版（15/15 单元测试通过）
+│   └── slam/               SLAM 论文教学实现（core/fastslam/epipolar/bowloop/...，80 项测试）
 │
 ├── scripts/                项目管理脚本（auto_commit.sh 自动提交）
-├── .github/workflows/      GitHub Actions（每周一 9:00 自动提交）
+├── .github/workflows/      GitHub Actions（每周一 UTC 09:00／北京 17:00 自动提交）
 └── .vscode/                VS Code 配置（conda 环境 llm_env，调试/任务）
 ```
+
+> 💡 `papers/` 论文库（PDF/LaTeX 源码）**仅存于本地**（已加入 `.gitignore`，不上传 GitHub）。
+> 在 GitHub 网页上指向 `papers/` 的链接无法打开属预期行为；克隆仓库后自行下载论文即可
+> （各主题 `papers/<主题>/README.md` 有逐篇清单与 arXiv 编号）。
 
 ---
 
@@ -82,7 +87,7 @@ pip install -r projects/nerf/requirements.txt   # NeRF 额外依赖（缺什么�
 
 ```bash
 cd projects/nerf
-# ① 单元测试（8/8）
+# ① 核心单元测试（test_core 8 项；全套 15 项用 pytest tests/）
 python tests/test_core.py
 
 # ② 生成演示数据（彩色小球，秒级）
@@ -104,7 +109,7 @@ python run_nerf.py --config data/demo_scene --mode render --exp demo_smoke --ckp
 
 - **开发规范**（文档/代码/提交/版本控制）：见 [CONSTRAINTS.md](CONSTRAINTS.md)
 - **本地自动提交**：`./scripts/auto_commit.sh`（用法见 [scripts/README.md](scripts/README.md)）
-- **GitHub Actions**：每周一 9:00 自动提交有变更的内容（`.github/workflows/auto-commit.yml`），也可在 Actions 页手动触发
+- **GitHub Actions**：每周一 UTC 09:00（北京时间 17:00）自动提交有变更的内容（`.github/workflows/auto-commit.yml`），也可在 Actions 页手动触发
 - **提交信息**：Conventional Commits 格式，如 `docs(nerf): 添加渲染方程章节`
 
 ## 🤝 贡献

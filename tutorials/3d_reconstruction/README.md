@@ -1,7 +1,7 @@
 # 3D 重建 — 教程架构
 
 > **主题**：3D Reconstruction（从二维图像恢复三维结构与外观）
-> **状态**：10 章全部完成 ｜ **论文精读**：13 篇逐篇精读见 [精读/](精读/README.md) ｜ 主线论文：COLMAP、KinectFusion、MVSNet、DeepSDF、NeuS、3DGS、DUSt3R
+> **状态**：10 章全部完成 ｜ **论文精读**：13 篇逐篇精读见 [精读/](精读/README.md) ｜ **主题总览**：[OVERVIEW.md](OVERVIEW.md) ｜ 主线论文：COLMAP、KinectFusion、MVSNet、DeepSDF、NeuS、3DGS、DUSt3R
 
 本文件是 3D 重建教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
 后续各章按 [CONSTRAINTS.md §3.4](../../CONSTRAINTS.md) 五步法

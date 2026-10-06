@@ -2,7 +2,7 @@
 
 这是论文 *NeRF: Representing Scenes as Neural Radiance Fields for View Synthesis*
 （Mildenhall et al., ECCV 2020）的**最小可运行 PyTorch 复现**，用于配合
-`../tutorial/` 的教程逐行学习。代码刻意保持精简，只保留论文的核心机制。
+[`../../tutorials/nerf/`](../../tutorials/nerf/README.md) 的教程逐行学习。代码刻意保持精简，只保留论文的核心机制。
 
 ## 功能
 

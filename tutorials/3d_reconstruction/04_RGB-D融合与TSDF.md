@@ -96,7 +96,7 @@ $$F_k(\mathbf{x}) = \frac{W_{k-1}\,F_{k-1}(\mathbf{x}) + w_k\,f_k(\mathbf{x})}{W
 
 **③ 选型理由**：点到面 vs 点到点 ICP：点到点的残差沿两点连线（与表面结构无关），要多次迭代才能"滑"向正确对齐；点到面把残差投影到局部切平面，一次线性化就吸收大部分相对运动——迭代次数显著更少，代价是需要法向（TSDF 梯度免费提供）。ICP（几何残差）vs 直接法（光度残差，[SLAM 教程第 06 章](../slam/06_视觉里程计-ii直接法.md)）：深度空间残差对曝光/光照不敏感（RGB-D 场景光照常不受控），且 RGB-D 天然有几何可用；代价是依赖深度质量与模型初始对齐。对应点用投影匹配而非全局最近邻搜索（kd-tree）：每点 $O(1)$、GPU 友好，代价是对初值要求更准。
 
-**④ 理论依据**：点到面 ICP 残差与线性化（Chen & Medioni, *"Object Modelling by Registration of Multiple Range Images"*, 1992；点云配准标准结果）；投影对应（Blais & Levine, 1995）；SE(3) 扰动模型与雅可比（[SLAM 教程第 02 章](../slam/02_三维刚体运动旋转与位姿.md) §2.5，式 (2.24)–(2.26)）；TSDF 光线投射查询见 Curless & Levoy / KinectFusion。
+**④ 理论依据**：点到面 ICP 残差与线性化（Chen & Medioni, *"Object Modelling by Registration of Multiple Range Images"*, 1992；点云配准标准结果）；投影对应（Blais & Levine, 1995）；SE(3) 扰动模型与雅可比（[SLAM 教程第 02 章](../slam/02_三维刚体运动旋转与位姿.md) §02.5，式 (2.24)–(2.26)）；TSDF 光线投射查询见 Curless & Levoy / KinectFusion。
 
 **⑤ 完整推导**（每步注明依据）：
 
@@ -104,7 +104,7 @@ $$F_k(\mathbf{x}) = \frac{W_{k-1}\,F_{k-1}(\mathbf{x}) + w_k\,f_k(\mathbf{x})}{W
 
 $$e = \mathbf{n}^\top\bigl(T\,\mathbf{p} - \mathbf{q}\bigr). \tag{4.9}$$
 
-（依据：点到平面距离——把两点之差投影到法向，只惩罚沿表面法向的错位。）对位姿加左扰动 $T\to\exp(\delta\boldsymbol\xi^\wedge)T$（依据：[SLAM 教程第 02 章] §2.5 的扰动模型；$\boldsymbol\xi$ 平移分量在前，与该教程 (2.25) 一致）。一阶展开：
+（依据：点到平面距离——把两点之差投影到法向，只惩罚沿表面法向的错位。）对位姿加左扰动 $T\to\exp(\delta\boldsymbol\xi^\wedge)T$（依据：[SLAM 教程第 02 章] §02.5 的扰动模型；$\boldsymbol\xi$ 平移分量在前，与该教程 (2.25) 一致）。一阶展开：
 
 $$\exp(\delta\boldsymbol\xi^\wedge)\,T\mathbf{p} \approx T\mathbf{p} + \delta\boldsymbol\rho + \delta\boldsymbol\phi\times\bigl(T\mathbf{p}\bigr). \tag{4.10}$$
 
@@ -155,5 +155,5 @@ $$t^{\ast} = t_{m-1} + \frac{F\bigl(\mathbf{r}(t_{m-1})\bigr)}{F\bigl(\mathbf{r}
 - KinectFusion / BundleFusion 延伸阅读入口：[../../papers/3d_reconstruction/README.md](../../papers/3d_reconstruction/README.md)（Curless & Levoy SIGGRAPH 1996 为 TSDF 概念起点，KinectFusion ISMAR 2011 为实时化，BundleFusion 加全局一致融合）。
 - 上一章：[./03_多视图立体重建MVS.md](./03_多视图立体重建MVS.md)（深度图从哪来；本章 $f_k$ 的观测对象即其输出）。
 - 下一章：[./05_从体素到网格表面提取.md](./05_从体素到网格表面提取.md)（把 TSDF 零水平集变成三角网格）。
-- 扰动模型与雅可比：[SLAM 教程第 02 章](../slam/02_三维刚体运动旋转与位姿.md)（§2.5，(4.10)–(4.11) 的出处）。
+- 扰动模型与雅可比：[SLAM 教程第 02 章](../slam/02_三维刚体运动旋转与位姿.md)（§02.5，(4.10)–(4.11) 的出处）。
 - 直接法与初值问题：[SLAM 教程第 06 章](../slam/06_视觉里程计-ii直接法.md)（§6.2，ICP 初值问题的同源机制）。

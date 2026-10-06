@@ -85,7 +85,7 @@ python -m pytest projects/slam/tests -v
 每个测试文件都支持**单点过滤**（传测试名子串，详见 [DEBUG.md](DEBUG.md) §1）：
 
 ```bash
-python tests/test_fastslam.py gate     # 预期：3/3 tests passed.（只跑名字含 gate 的测试）
+python tests/test_fastslam.py gate     # 预期：1/1 tests passed.（只跑名字含 gate 的测试）
 ```
 
 ---

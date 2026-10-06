@@ -29,10 +29,12 @@ cd /home/dzxu/RoboTwinTutorial/projects/slam     # 必须在本目录（原因�
 python tests/test_fastslam.py gate       # 只跑名字含 "gate" 的测试
 # 预期输出：
 # PASS test_mahalanobis_gate_rejects_outlier
+# 1/1 tests passed.
+python tests/test_fastslam.py gat        # 前缀更宽：gate/gating 两个测试都命中
+# PASS test_mahalanobis_gate_rejects_outlier
 # PASS test_nearest_neighbor_gating_beats_dead_reckoning
-# PASS test_range_bearing_jacobian_matches_finite_differences
-# 3/3 tests passed.
-python tests/test_fastslam.py gat        # 子串写错时：列出全部可用测试名再退出（exit 1）
+# 2/2 tests passed.
+python tests/test_fastslam.py zzz        # 子串无任何匹配：列出全部可用测试名再退出（exit 1）
 python tests/test_vins.py                # 不带参数 = 该文件全部测试
 ```
 

@@ -2,7 +2,7 @@
 
 > 本章目标：逐节精读论文 *RoboTwin 2.0: A Scalable Data Generator and Benchmark with Strong Domain Randomization for Robust Bimanual Robotic Manipulation*（arXiv:2506.18088），让你能"看懂一篇顶会论文"，并建立自己的精读笔记模板。
 >
-> 建议：本章对照论文原文阅读效果最佳。论文位于 `../paper/2506.18088v2.pdf`。
+> 建议：本章对照论文原文阅读效果最佳。论文位于 [papers/robotwin/paper/2506.18088v2.pdf](../../papers/robotwin/paper/2506.18088v2.pdf)。
 
 ---
 

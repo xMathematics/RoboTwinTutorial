@@ -21,7 +21,7 @@
 | 感知输入 | [SLAM 教程](../slam/README.md)、[3D 重建教程](../3d_reconstruction/README.md) | ——（见各教程） | —— |
 | 仿真与策略学习闭环 | 本章 | RoboTwin 2.0 | MuJoCo + RoboTwin |
 
-（表中"第 07/08 章"当前为写作中状态，见[架构 README](./README.md)；行序即执行顺序，安全滤波行贯穿全部执行层。）
+（行序即执行顺序，安全滤波行贯穿全部执行层。）
 
 **③ 选型理由** 为什么给"对应表 + 选型矩阵"而不是单一推荐：任务谱系是连续的——从自由空间结构化任务（RoboTwin 的放碗、按铃）到接触丰富的装配，谱系每一点上的最优架构不同；对应表回答"每层有什么可用"（库存问题），选型矩阵回答"我的任务该把哪些层换成学习"（定位问题）。单一推荐只在谱系某一点最优，矩阵才是可迁移的判据。
 
@@ -163,7 +163,7 @@ $$
 
 ## 配套阅读
 
-- 相邻章节：[第 09 章｜前沿：学习式规划与腿式控制](./09_前沿学习式规划与腿式控制.md)（混合范式与蒸馏——本章选型矩阵的"学习侧"依据）｜ [第 01 章｜控制与规划全景](./01_控制与规划全景.md)（任务栈 (1.1)——对应表的骨架）｜ 第 07 章《安全控制：CBF》（写作中，见[架构 README](./README.md)）——实战路径第 5 步的安全层。
+- 相邻章节：[第 09 章｜前沿：学习式规划与腿式控制](./09_前沿学习式规划与腿式控制.md)（混合范式与蒸馏——本章选型矩阵的"学习侧"依据）｜ [第 01 章｜控制与规划全景](./01_控制与规划全景.md)（任务栈 (1.1)——对应表的骨架）｜ 第 07 章《[安全控制：CBF](./07_安全控制控制屏障函数.md)》——实战路径第 5 步的安全层。
 - 跨主题：[RoboTwin 教程](../robotwin/README.md)（第 03/04 章域随机化、第 07 章环境搭建、第 08 章策略训练与部署）｜ [SLAM 教程第 10 章](../slam/10_建图与系统实战.md)（建图与系统实战——控制栈的感知输入）｜ [3D 重建教程](../3d_reconstruction/README.md)（第 07/08 章：抓取位姿与场景表示的来源）
 - 论文：[Rapid Locomotion（Margolis et al., RSS 2022）](../../papers/control_planning/frontier/arXiv-2205.02824_RapidLocomotion.pdf) §II（执行器接口与增益实践）｜ [PETS](../../papers/control_planning/frontier/arXiv-1805.12114_PETS.pdf)、[Crocoddyl](../../papers/control_planning/frontier/arXiv-1909.04947_Crocoddyl.pdf)（L3/L4 工具的论文底座）｜ [CBF 综述](../../papers/control_planning/classics/arXiv-1903.11199_CBF-Survey.pdf)（安全层）；论文库索引：[papers/control_planning/README.md](../../papers/control_planning/README.md)。
 - 主题导航：[架构 README](./README.md) ｜ [主题总览](./OVERVIEW.md)

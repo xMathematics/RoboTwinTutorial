@@ -5,7 +5,7 @@
 > [`run_nerf.py`](run_nerf.py) 的 test 模式调用，也可独立对两张图打分）。
 > **本项目指标基线**：PSNR / SSIM（LPIPS 列为延伸，未实现，见文末）。
 > **论文对照**：NeRF 论文（Mildenhall et al., ECCV 2020）实验节以 PSNR / SSIM / LPIPS
-> 三指标报告结果，详见教程 [06_数据集与实验结果.md](../tutorials/nerf/06_数据集与实验结果.md)。
+> 三指标报告结果，详见教程 [06_数据集与实验结果.md](../../tutorials/nerf/06_数据集与实验结果.md)。
 
 ---
 
@@ -32,7 +32,7 @@
   给出一个客观、可复现、可跨论文比较的数字——PSNR 承担这个角色。
 - **对应论文/教程的主张**：NeRF 论文 Tab.1 / Tab.2（实验节 Sec.6）的主指标；
   三大数据集上的 PSNR 对比表见教程
-  [06_数据集与实验结果.md §6.2](../tutorials/nerf/06_数据集与实验结果.md)
+  [06_数据集与实验结果.md §6.2](../../tutorials/nerf/06_数据集与实验结果.md)
   （如 Realistic Synthetic 360° 上 NeRF 31.01 dB，比第二名 NV 高 4.96 dB）。
 
 ### 1.2 如何计算
@@ -54,8 +54,8 @@ $$
 - **出处**：(M.1) 是信号处理中峰值信噪比的标准定义；以 PSNR 评价新视角合成
   是 NeRF 论文实验节（及此前工作）通行的协议。
 - **互引**：各数据集的 PSNR 参考值与"读表方法论"见
-  [06_数据集与实验结果.md](../tutorials/nerf/06_数据集与实验结果.md) §6.2 / §6.5；
-  训练侧 MSE 损失的推导见教程 [05_层次采样与训练细节.md](../tutorials/nerf/05_层次采样与训练细节.md)。
+  [06_数据集与实验结果.md](../../tutorials/nerf/06_数据集与实验结果.md) §6.2 / §6.5；
+  训练侧 MSE 损失的推导见教程 [05_层次采样与训练细节.md](../../tutorials/nerf/05_层次采样与训练细节.md)。
 
 ### 1.3 健康值范围
 
@@ -158,7 +158,7 @@ print('PSNR %.2f dB | SSIM %.4f' % (psnr(pred, gt), ssim(pred, gt)))
   仍很高）。NeRF 论文 Tab.1 / Tab.2 两者同时报告，本项目与论文保持一致。
 - **对应论文/教程的主张**：NeRF 论文在三大数据集上均报告 SSIM（如 Realistic
   Synthetic 360° 上 0.947），对比表见
-  [06_数据集与实验结果.md §6.2](../tutorials/nerf/06_数据集与实验结果.md)。
+  [06_数据集与实验结果.md §6.2](../../tutorials/nerf/06_数据集与实验结果.md)。
 
 ### 2.2 如何计算
 
@@ -187,7 +187,7 @@ $$
   2004——三因子定义为其 Eq. 6，高斯加权统计量为其 Eq. 7–9，(M.2) 为指数取 1
   的简化式（其 Eq. 13）；常数 $\sigma=1.5, k_1=0.01, k_2=0.03$ 为该文推荐设置。
 - **互引**：SSIM 在 NeRF 论文结果表中的位置与"LLFF 在 LPIPS 上反超"的读表
-  细节见 [06_数据集与实验结果.md](../tutorials/nerf/06_数据集与实验结果.md)
+  细节见 [06_数据集与实验结果.md](../../tutorials/nerf/06_数据集与实验结果.md)
   §6.2；SSIM 与 PSNR 的互补关系见本文件 §2.1。
 
 ### 2.3 健康值范围
@@ -245,4 +245,4 @@ python tests/test_metrics.py ssim     # 实测：3/3 tests passed
 | 跑指标测试 | `python tests/test_metrics.py`（全部）/ `python tests/test_metrics.py ssim`（单点） |
 | 端到端评测 | `python run_nerf.py --config <场景> --mode test --exp <实验名> --ckpt <ckpt路径>` |
 | 看结果 | `logs/<实验名>/metrics.json` + `[test]` 汇总行 |
-| 论文结果对照 | [06_数据集与实验结果.md](../tutorials/nerf/06_数据集与实验结果.md) |
+| 论文结果对照 | [06_数据集与实验结果.md](../../tutorials/nerf/06_数据集与实验结果.md) |

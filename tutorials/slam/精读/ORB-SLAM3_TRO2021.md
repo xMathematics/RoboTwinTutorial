@@ -162,7 +162,7 @@ $$s^{new} = s^{old}\exp(\delta s) \tag{10}$$
 
 1. **DBoW2 候选**：对活跃关键帧 $K_a$ 查全 Atlas 数据库，取最相似三帧、排除共视邻居；
 2. **组装局部窗口（local window）**：$K_a$ 及其最佳共视邻居 + 它们观测的全部地图点；
-3. **3D 对齐变换**：RANSAC 在局部窗口与匹配地图的 3D-3D 对应上求 $\mathbf{T}_{nm}$——单目或地图不成熟时 $\mathbf{T}_{nm} \in \mathrm{Sim}(3)$，否则 $\in SE(3)$；两种情形都用 Horn 算法（引 [77]，绝对定向闭式解：教程 9.2 ⑤ 的去质心 / 范数比尺度 / 互协方差 SVD 三步）以三点最小集出假设、按变换后地图点的重投影误差投票；
+3. **3D 对齐变换**：RANSAC 在局部窗口与匹配地图的 3D-3D 对应上求 $\mathbf{T}_{nm}$——单目或地图不成熟时 $\mathbf{T}_{nm} \in \mathrm{Sim}(3)$，否则 $\in SE(3)$；两种情形都用 Horn 算法（引 [77]，绝对定向闭式解：教程 09.2 ⑤ 的去质心 / 范数比尺度 / 互协方差 SVD 三步）以三点最小集出假设、按变换后地图点的重投影误差投票；
 4. **引导匹配精化**：用 $\mathbf{T}_{nm}$ 把两图地图点互投、双向（bidirectional）匹配扩充，再以双向重投影误差为目标非线性优化精化（内点过阈值则再迭代一轮、缩窗重搜）；
 5. **三共视关键帧验证**：不再等 DBoW2 连续三次命中（那会延迟或漏检），而是在活跃地图中找与 $K_a$ 共视、且各含两条以上窗口匹配的关键帧来验证 $\mathbf{T}_{nm}$——验证所需信息多半已在图里，召回由此提高；
 6. **VI 重力方向验证**：地图成熟时 $\mathbf{T}_{nm} \in SE(3)$，检查其 roll/pitch 是否低于阈值——重力方向已由 IMU 钉死，两图对齐后的残余倾斜即假阳性证据。
@@ -209,9 +209,9 @@ $$s^{new} = s^{old}\exp(\delta s) \tag{10}$$
 | IMU 预积分与残差（§V-A，式 (2)） | `preint.ImuParams` / `preint.Preintegration`（属性 `delta_R` / `delta_v` / `delta_p` / `cov` / `j_bias`；方法 `correct` / `predict`；`so3_right_jacobian`） | 预积分推导 (10.1)–(10.8)；残差即 (10.10) 同构 |
 | IMU 因子入图（式 (2) + 图 2 随机游走项） | `vins.ImuFactor`（包装 `Preintegration`）、`vins.ReprojectionFactor`、`vins.ViBundle` | 紧耦合目标 (10.9)–(10.11) |
 
-两点读法提示：其一，`preint.Preintegration.correct` 对应教程 (10.8)（一阶偏置修正、免重积分），`predict` 是测量模型 (10.5) 的零噪声反解——把式 (2) 的三段残差"状态侧 − 测量侧"对上即可逐行核对；其二，`bowloop.PoseGraph2D` 用 SE(2) 示范 (9.8) 的流形 GN + gauge fixing 结构，单目 ORB-SLAM3 的对应物是 Sim(3) 位姿图（7 维切空间），维度不同、优化结构同源（教程 9.3 第 3 步）。
+两点读法提示：其一，`preint.Preintegration.correct` 对应教程 (10.8)（一阶偏置修正、免重积分），`predict` 是测量模型 (10.5) 的零噪声反解——把式 (2) 的三段残差"状态侧 − 测量侧"对上即可逐行核对；其二，`bowloop.PoseGraph2D` 用 SE(2) 示范 (9.8) 的流形 GN + gauge fixing 结构，单目 ORB-SLAM3 的对应物是 Sim(3) 位姿图（7 维切空间），维度不同、优化结构同源（教程 09.3 第 3 步）。
 
-**fastslam 模块为何不在对照表里**：[FastSLAM（AAAI 2002）](./FastSLAM_AAAI2002.md)（`fastslam.FastSLAM2D`：粒子 + 条件独立路标 EKF）是概率 SLAM 的**另一条求解路线**（滤波 / 采样 vs 批量 MAP）——它对应综述"经典时代"的第二个公式支柱，与 ORB-SLAM3 的因子图 MAP 在目标函数层面就不同（教程 (1.6) 的两种解法之分，见第 01 章 1.1③）。放着它的原因是让两条路线在同一仓库里可对比，而非功能对应。
+**fastslam 模块为何不在对照表里**：[FastSLAM（AAAI 2002）](./FastSLAM_AAAI2002.md)（`fastslam.FastSLAM2D`：粒子 + 条件独立路标 EKF）是概率 SLAM 的**另一条求解路线**（滤波 / 采样 vs 批量 MAP）——它对应综述"经典时代"的第二个公式支柱，与 ORB-SLAM3 的因子图 MAP 在目标函数层面就不同（教程 (1.6) 的两种解法之分，见第 01 章 01.1③）。放着它的原因是让两条路线在同一仓库里可对比，而非功能对应。
 
 **走读建议**：`python3 tests/test_preint.py` 驱动 `Preintegration`，对照教程 (10.4)–(10.8) 看右乘更新与协方差递推；`tests/test_epipolar.py`、`tests/test_bowloop.py` 的健康值与走读路径见[ORB-SLAM 精读](./ORB-SLAM_TRO2015.md) §7；系统级体验按教程第 10 章 10.5 编译运行官方 ORB-SLAM3（EuRoC 单目-惯性入口）。
 

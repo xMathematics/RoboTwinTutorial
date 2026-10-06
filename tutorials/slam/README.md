@@ -1,7 +1,7 @@
 # SLAM — 教程架构
 
 > **主题**：Simultaneous Localization and Mapping（同步定位与建图）
-> **状态**：10 章全部完成 ｜ **论文精读**：18 篇逐篇精读见 [精读/](精读/README.md) ｜ 主线教材：《视觉 SLAM 十四讲》（高翔）+ 概率机器人学（Thrun）
+> **状态**：10 章全部完成 ｜ **论文精读**：18 篇逐篇精读见 [精读/](精读/README.md) ｜ **主题总览**：[OVERVIEW.md](OVERVIEW.md) ｜ 主线教材：《视觉 SLAM 十四讲》（高翔）+ 概率机器人学（Thrun）
 
 本文件是 SLAM 教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
 后续各章按 [CONSTRAINTS.md §3.4](../../CONSTRAINTS.md) 五步法
@@ -23,8 +23,8 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 | [02](#02三维刚体运动旋转与位姿) | 三维刚体运动：旋转与位姿 | 相机转 90° 再转 90°，为何与一次转 180° 不同？欧拉角为何会万向锁 | 旋转矩阵、四元数、SO(3)/SE(3) 李群李代数 | 已完成 |
 | [03](#03概率状态估计基础) | 概率状态估计基础 | 运动与观测都有噪声，如何用递归方式融合两类信息 | 贝叶斯滤波、EKF 完整推导 | 已完成 |
 | [04](#04相机模型与特征提取) | 相机模型与特征提取 | 3D 点如何落到 2D 图像上；哪些图像点在不同视角下稳定可重复匹配 | 针孔相机模型、畸变模型、FAST/ORB 特征 | 已完成 |
-| [05](#05视觉里程计-i特征点法) | 视觉里程计 I：特征点法 | 两帧间匹配的特征点对，如何恢复相机运动与点的 3D 位置 | 对极几何、八点法、PnP、三角化 | 写作中 |
-| [06](#06视觉里程计-ii直接法) | 视觉里程计 II：直接法 | 弱纹理、无特征场景（白墙）下特征法失效，如何继续估计运动 | 光流、光度一致性最小化 | 写作中 |
+| [05](#05视觉里程计-i特征点法) | 视觉里程计 I：特征点法 | 两帧间匹配的特征点对，如何恢复相机运动与点的 3D 位置 | 对极几何、八点法、PnP、三角化 | 已完成 |
+| [06](#06视觉里程计-ii直接法) | 视觉里程计 II：直接法 | 弱纹理、无特征场景（白墙）下特征法失效，如何继续估计运动 | 光流、光度一致性最小化 | 已完成 |
 | [07](#07后端-i滤波与增量估计) | 后端 I：滤波与增量估计 | 前端逐帧估计误差不断累积，如何在线维护全局一致估计 | EKF-SLAM、信息矩阵与稀疏性 | 已完成 |
 | [08](#08后端-ii图优化与-ba) | 后端 II：图优化与 BA | 关键帧上百、路标上万时，如何高效求解全局一致状态 | 非线性最小二乘、因子图、稀疏 BA、流形扰动 | 已完成 |
 | [09](#09回环检测) | 回环检测 | 走回走过的地方，如何"认出来"并借此消除累积漂移 | 词袋模型（DBoW2）、位姿图优化 | 已完成 |
@@ -38,7 +38,7 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 - **解决方法概览**：联立定位与建图的状态估计问题；传感器选型对比（视觉 / 激光 / IMU / 多传感器融合）。
 - **理论依据**：概率机器人学（Thrun et al., *Probabilistic Robotics*）第 1、2 章。
 - **推导产出**：SLAM 的形式化定义——状态方程 + 观测方程（含噪声）。
-- **配套阅读**：[papers/slam/README.md](../../papers/slam/README.md)——已收录经典 10 篇 + 前沿 7 篇，按章对应。
+- **配套阅读**：[papers/slam/README.md](../../papers/slam/README.md)——已收录经典 11 篇 + 前沿 7 篇（共 18 篇），按章对应。
 
 ### 02｜三维刚体运动：旋转与位姿
 
@@ -137,6 +137,6 @@ SLAM 就是把它们放进同一个概率估计框架里联立求解。
 入口见 [精读/README.md](精读/README.md)——与本章教程"概念篇"互补的"论文篇"。
 
 - 教材：[视觉 SLAM 十四讲（第 2 版）](https://github.com/gaoxiang12/slambook2)（配套代码）
-- 经典论文：已收录至 [papers/slam/classics/](../../papers/slam/README.md)（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono）；DBoW2 见 [IEEE](https://ieeexplore.ieee.org/document/6722504)
+- 经典论文：已收录至 [papers/slam/classics/](../../papers/slam/README.md)（FastSLAM、PTAM、ORB-SLAM 三部曲、LSD-SLAM、DSO、LOAM、IMU 预积分、VINS-Mono、SLAM 权威综述）；DBoW2 见 [IEEE](https://ieeexplore.ieee.org/document/6722504)
 - 数据集：[EuRoC MAV](https://projects.asl.ethz.ch/datasets/) ｜ [TUM RGB-D](https://cvg.cit.tum.de/data/datasets/rgbd-dataset)
 - 相关主题：[3D 重建](../3d_reconstruction/README.md)（稠密建图部分交汇）｜ [NeRF](../nerf/OVERVIEW.md)（神经隐式建图是前沿交汇点）
