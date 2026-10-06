@@ -41,7 +41,7 @@
   - `projects/nerf`（torch）：**必须**用 llm_env；
   - `projects/slam`、`projects/3d_reconstruction`、`projects/control_planning`、
     `projects/robotwin`（纯 numpy）：llm_env 与系统 python3（numpy≥1.26）均可，
-    统一建议用 llm_env（全套件已在两种环境验证通过，215 项测试）。
+    统一建议用 llm_env（全套件已在两种环境验证通过，262 项测试）。
 - 验证：终端里 `python -c "import torch, numpy, pytest; print(torch.__version__, numpy.__version__, pytest.__version__)"`。
 
 ## 3. 运行测试（三种方式，单点 vs 全局）

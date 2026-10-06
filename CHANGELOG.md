@@ -7,6 +7,26 @@
 
 ## [Unreleased]
 
+### 新增（论文级代码映射全覆盖，2026-10-07）
+
+- **全库 52 篇论文建立「论文 × 代码状态」映射**：各主题 `精读/README.md` 新增映射表，
+  每篇标注 ✅实现（链接模块）/ 🔶教学代理（说明简化项）/ ❌未实现（一句话原因）——
+  现有 27 篇有代码对应，25 篇（VLA 基础模型、需 GPU 训练的神经隐式方法、完整系统）
+  给出明确不做的原因
+- **projects/3d_reconstruction/ 新增三模块**（39→55 项测试）：poisson.py（FFT 均匀网格
+  泊松重建，Kazhdan 2006 教学代理）、plane_sweep.py（平面扫描立体 + NCC 置信度，
+  COLMAP-MVS/MVSNet 共享内核）、splatting.py（3DGS 前向泼溅渲染：EWA 投影 + 深度排序
+  + alpha 合成，优化侧不做）；scene.py 增程序化纹理与彩色渲染
+- **projects/slam/ 新增 ptam/**（80→87 项测试）：PTAM 教学代理——跟踪/建图两任务分离、
+  关键帧判据、motion-only G-N 跟踪、X/Y/Z 三分局部 BA（复用 core/epipolar）
+- **projects/robotwin/ 新增两模块**（35→52 项测试）：diffusion_lite.py（2D 轨迹 DDPM
+  生成式策略，T=50 手写 MLP 反传）、grasp_2d.py（2D 平行夹爪力闭合 + Ferrari-Canny L1
+  质量，双口径交叉验证）
+- **projects/control_planning/ 新增 mpnet_lite.py**（46→53 项测试）：学习式采样偏置
+  规划（SDF 编码 + 手写 MLP + 偏置 RRT，迭代数降至均匀版 ~0.79）；并勘正 MPNet 署名
+  为 Qureshi et al., ICRA 2019
+- 全部新测试带 `__main__` 子串过滤、双环境全绿；五项目合并收集 **262 passed**
+
 ### 新增（三大主题项目实现，2026-10-07）
 
 - **projects/3d_reconstruction/**：3D 重建教学实现（纯 NumPy）——scene.py（SDF 基元 +

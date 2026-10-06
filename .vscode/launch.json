@@ -124,7 +124,7 @@
       "justMyCode": true
     },
     {
-      "name": "SLAM: 全局测试（pytest 全套件 80 项）",
+      "name": "SLAM: 全局测试（pytest 全套件 87 项）",
       "type": "debugpy",
       "request": "launch",
       "module": "pytest",

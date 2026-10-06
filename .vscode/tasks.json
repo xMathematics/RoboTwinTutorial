@@ -71,7 +71,7 @@
       "problemMatcher": []
     },
     {
-      "label": "SLAM: 全局测试（pytest 全套件 80 项）",
+      "label": "SLAM: 全局测试（pytest 全套件 87 项）",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest projects/slam/tests -v",
       "options": {
@@ -100,7 +100,7 @@
       "problemMatcher": []
     },
     {
-      "label": "3D 重建: 全局测试（pytest 全套件 39 项）",
+      "label": "3D 重建: 全局测试（pytest 全套件 55 项）",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest projects/3d_reconstruction/tests -v",
       "options": {
@@ -129,7 +129,7 @@
       "problemMatcher": []
     },
     {
-      "label": "control_planning: 全局测试（pytest 全套件 46 项）",
+      "label": "control_planning: 全局测试（pytest 全套件 53 项）",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest projects/control_planning/tests -v",
       "options": {
@@ -158,7 +158,7 @@
       "problemMatcher": []
     },
     {
-      "label": "RoboTwin: 全局测试（pytest 全套件 35 项）",
+      "label": "RoboTwin: 全局测试（pytest 全套件 52 项）",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest projects/robotwin/tests -v",
       "options": {

@@ -43,8 +43,8 @@ conda activate llm_env          # 纯 numpy，任意 numpy>=1.26 的环境亦可
 cd projects/3d_reconstruction
 
 python demo.py                  # 端到端：24 视角 → TSDF 融合 → 面提取 → 评测（约 8 s，F@20mm≈0.96）
-python -m pytest tests/ -q      # 全局测试：39 项（约 1.5 s）
-python tests/test_marching.py normals   # 单点测试（子串过滤）
+python -m pytest tests/ -q      # 全局测试：55 项（约 16 s）
+python tests/test_poisson.py sphere     # 单点测试（子串过滤）
 ```
 
 ## control_planning/ 快速开始
@@ -54,7 +54,7 @@ conda activate llm_env
 cd projects/control_planning
 
 python demo.py                  # 四段冒烟：RRT*/iLQR/CEM-MPC/CBF 安全滤波（约 11 s）
-python -m pytest tests/ -q      # 全局测试：46 项（约 32 s，含 PPO 训练测试）
+python -m pytest tests/ -q      # 全局测试：53 项（约 38 s，含 PPO/MPNet 训练测试）
 python tests/test_ilqr.py riccati       # 单点测试（子串过滤）
 ```
 
@@ -65,8 +65,8 @@ conda activate llm_env
 cd projects/robotwin
 
 python demo.py                  # 3 任务 × 3 档域随机化 × 2 策略成功率表（约 2 s）
-python -m pytest tests/ -q      # 全局测试：35 项（约 4 s）
-python tests/test_policies.py dose      # 单点测试（子串过滤）
+python -m pytest tests/ -q      # 全局测试：52 项（约 14 s）
+python tests/test_grasp_2d.py disk      # 单点测试（子串过滤）
 ```
 
 VS Code 中可直接用 Run and Debug 或任务面板执行（配置见 `.vscode/`）。
