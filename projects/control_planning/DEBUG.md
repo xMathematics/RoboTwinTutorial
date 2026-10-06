@@ -9,12 +9,12 @@
 
 ## 1. 环境与两种测试
 
-**解释器**：本项目纯 numpy，两套解释器均验证通过（46/46）——
+**解释器**：本项目纯 numpy，两套解释器均验证通过（53/53）——
 
 | 解释器 | numpy | 全套件耗时（实测，逐文件直跑） |
 |--------|-------|--------------------|
-| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | ~31 s |
-| 系统 `python3` | 1.26.4 | ~33 s |
+| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | ~33 s |
+| 系统 `python3` | 1.26.4 | ~39 s |
 
 任选其一即可；VS Code 默认指向 `llm_env`（见 SETUP.md §2）。最慢的是
 `tests/test_ppo_lite.py`（~20 s：训练收敛 + 策略梯度中心差分对照各训练/采样一次），
@@ -29,6 +29,7 @@ python tests/test_osc_arm.py    #  7/7 tests passed.   ~0.3 s  （2R 臂 + 阻�
 python tests/test_cbf.py        #  6/6 tests passed.   ~1.0 s  （CBF 安全滤波）
 python tests/test_mpc_cem.py    #  6/6 tests passed.   ~4.4 s  （CEM-MPC）
 python tests/test_rrt.py        #  7/7 tests passed.   ~5.6 s  （RRT / RRT*）
+python tests/test_mpnet.py      #  7/7 tests passed.   ~1.4 s  （MPNet 采样偏置；系统 python3 ~4.2 s）
 python tests/test_ppo_lite.py   #  6/6 tests passed.  ~19.9 s  （微型 PPO）
 ```
 
@@ -64,7 +65,7 @@ pytest tests/test_rrt.py -k rrt_star -v                                    # -k 
 ```bash
 # 仓库根目录：
 cd /home/dzxu/RoboTwinTutorial
-python -m pytest projects/control_planning/tests -v     # 预期：46 passed
+python -m pytest projects/control_planning/tests -v     # 预期：53 passed
 # 或在 projects/control_planning 下逐文件直跑（不依赖 pytest）：
 cd projects/control_planning
 for f in tests/test_*.py; do python3 "$f"; done
@@ -77,7 +78,7 @@ for f in tests/test_*.py; do python3 "$f"; done
 | 改了某个模块（如 `mpc_cem.py`） | 单点：`python tests/test_mpc_cem.py`；`mpc_cem` 复用 `ilqr` 的动力学与 `rrt` 的走廊场景，故再跑 `tests/test_ilqr.py` |
 | 改了 `metrics.py`（被全部模块的测试断言取用） | 先 `tests/test_metrics.py`，再全局 |
 | 提交前 | 全局 pytest + VS Code Testing 侧栏全绿 |
-| 怀疑 numpy 版本差异 | 两个解释器各跑一遍全局；两套解释器的 46 个测试结果与打印数字当前逐位一致（含 iLQR 的 11 轮收敛）。历史上 iLQR 的收敛轮数出现过跨解释器 ±3 轮的浮动（浮点求和顺序差异，最终 J 一致）——若再现此类现象，断言不要绑迭代数，绑单调性与收敛标志 |
+| 怀疑 numpy 版本差异 | 两个解释器各跑一遍全局；两套解释器的 53 个测试结果与打印数字当前逐位一致（含 iLQR 的 11 轮收敛与 mpnet 的 86.0/109.4 迭代数）。历史上 iLQR 的收敛轮数出现过跨解释器 ±3 轮的浮动（浮点求和顺序差异，最终 J 一致）——若再现此类现象，断言不要绑迭代数，绑单调性与收敛标志 |
 
 ### 1.4 常见启动失败
 
@@ -118,6 +119,8 @@ for f in tests/test_*.py; do python3 "$f"; done
 | `osc_arm.py::dls_ik`（~L244 `dq = J.T @ ...`） | `J @ J.T + λ²I` 的条件数、步长范数（变量表 O-2） |
 | `ppo_lite.py::ppo_update` 掩码（~L452 `masked = ...`） | 截断掩码的命中比例、`coef` 置零样本（变量表 P-3） |
 | `ppo_lite.py::compute_gae`（~L296 `adv_next = ...`） | `delta`（TD 残差）与反向累积的 `adv_next`（变量表 P-6） |
+| `mpnet_lite.py::mse_loss_grad` 反向（~L454 `g = diff / ...`） | 残差 `diff` 与四个梯度块——中心差分对照失效时先看这里（变量表 N-1） |
+| `mpnet_lite.py::plan_rrt_biased` 采样分支（~L649） | 偏置判定、条件节点（goal-nearest）与建议点抖动后的 `q_rand`（变量表 N-2/N-3） |
 
 ---
 
@@ -125,7 +128,7 @@ for f in tests/test_*.py; do python3 "$f"; done
 
 约定：**形状**为断点处的 numpy 形状；**健康值**为基准场景（测试/demo 定种子）
 实测；**异常信号**出现即有 bug 或配置错误。分组编号
-R(RRT)/I(iLQR)/M(MPC-CEM)/C(CBF)/O(OSC 臂)/P(PPO)。
+R(RRT)/I(iLQR)/M(MPC-CEM)/C(CBF)/O(OSC 臂)/P(PPO)/N(MPNet)。
 
 ### R：rrt（断点 `rrt.py`）
 
@@ -183,6 +186,14 @@ R(RRT)/I(iLQR)/M(MPC-CEM)/C(CBF)/O(OSC 臂)/P(PPO)。
 | P-4 | 任意次更新后 | `params.log_std` | 探索标准差 (2,)（σ = exp(log_std)） | `lr_log_std=0`（train 默认）下恒 0.5；放开学习则单调漂移（实测 0.5 → 0.70，无收益） | 不冻 σ 还想收敛 → 方差噪声支配 log_std 梯度，属已知现象非 bug |
 | P-5 | `ppo_update` 的 `vf_hist` | 价值损失 (逐 epoch) | 0.5·(V−ret)² 均值 | 训练 20 轮后 ~0.34 → 收敛 ~**0.01** | 不降 → 特征/目标错（查 `value_features` 与 GAE `returns`） |
 | P-6 | `test_policy_gradient_matches_central_difference` 打印 | FD/解析方向导数比 | 公共随机数中心差分 vs (8.7) 估计 | 实测 **0.68 / 0.84**（8k 条轨迹的采样噪声 ~15%；符号一致） | 比值差整数量级（如 1/T 倍）→ 归一化口径错（见 §4 案例 2） |
+
+### N：mpnet_lite（断点 `mpnet_lite.py`）
+
+| # | 断点 / 来源 | 变量 | 含义（形状） | 健康值 | 异常信号 |
+|---|-------------|------|--------------|--------|----------|
+| N-1 | `train_mpnet` 返回 `history` | 蒸馏损失曲线 (9.2)（epochs+1 = 601,） | 训练健康度主仪表 | seed0 实测 **2.6111 → 0.1082**（40 环境 × 600 轮，逐位双环境一致） | 不降 → 数据管线/反向传错（先跑 `tests/test_mpnet.py gradient` 的中心差分对照）；回升 → lr 过大 |
+| N-2 | `test_proposals_free_rate_beats_uniform` 打印 | 建议点自由率 vs 均匀基线 | 网络避障方向质量（标量对） | **0.938 vs 0.868**（gap +0.070；4 个未见环境、77 个建议点） | gap ≤ 0 → 推理侧 `k` 与训练不一致，或条件点分布/编码归一化被改 |
+| N-3 | `test_biased_rrt_needs_fewer_iters` 打印 | 偏置/均匀平均迭代数（标量对） | 采样偏置的实际收益 | **86.0 vs 109.4（ratio 0.786）**，逐 (环境, seed) 配对 8/8 偏置臂不劣 | ratio ≥ 1 → 建议点撞墙率升高（查 `jitter`/`k`/专家数据量）；两臂逐位相等 → 偏置分支未生效（误传 `p_bias=0`） |
 
 ---
 

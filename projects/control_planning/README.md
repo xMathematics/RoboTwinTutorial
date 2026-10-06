@@ -16,14 +16,14 @@ conda activate llm_env
 # ② 依赖校验：本包仅依赖 numpy（无 torch/scipy）
 python -c "import numpy; print('numpy', numpy.__version__)"        # 预期: numpy 2.2.6
 
-# ③ 运行全套测试（7 个文件 46 个测试，全部确定性）
+# ③ 运行全套测试（8 个文件 53 个测试，全部确定性）
 python tests/test_rrt.py                                           # 预期: 7/7 tests passed.
 
 # ④ 核心入口冒烟演示（规划→优化→MPC→安全滤波四段，确定性输出，约 11 s）
 python demo.py
 ```
 
-- **全局测试**：`python -m pytest projects/control_planning/tests -v`（46 个测试，llm_env 约 31 s / 系统 python3 约 33 s）
+- **全局测试**：`python -m pytest projects/control_planning/tests -v`（53 个测试，llm_env 约 33 s / 系统 python3 约 39 s）
 - **单点测试**：`python tests/test_cbf.py projection`（子串过滤，无匹配会列出可用测试名）
 - VS Code 调试配置见 [.vscode/launch.json](../../.vscode/launch.json)，用法见 [.vscode/SETUP.md](../../.vscode/SETUP.md)
 
@@ -37,6 +37,7 @@ python demo.py
 | [cbf.py](cbf.py) | CBF 综述（Ames et al., ECC 2019） | [07](../../tutorials/control_planning/07_安全控制控制屏障函数.md) | 圆障碍速度阻尼屏障（综述 §IV 相对阶口径）、CBF-QP (7.9) 闭式投影 (7.13)、多约束 POCS 投影迭代 | 6 |
 | [osc_arm.py](osc_arm.py) | Khatib（IEEE JRA 1987）/ Hogan（J-DSC 1985） | [06](../../tutorials/control_planning/06_操作空间控制与阻抗控制.md) | 平面 2R 臂：FK/解析雅可比 (6.3)、M/C/g 动力学 (6.2)、DLS 逆运动学、任务空间阻抗 τ = Jᵀ(Ke + Dė) (6.12)/(6.4) | 7 |
 | [ppo_lite.py](ppo_lite.py) | PPO（Schulman et al., 2017）/ GAE（Schulman et al., 2016） | [08](../../tutorials/control_planning/08_学习式控制强化学习.md) | 线性高斯策略手写前向/反向、GAE (8.13)–(8.15)、截断代理目标 (8.12)、点质量到达 20 步短回合 | 6 |
+| [mpnet_lite.py](mpnet_lite.py) | MPNet（Qureshi et al., ICRA 2019） | [09 §09.1](../../tutorials/control_planning/09_前沿学习式规划与腿式控制.md) | 学习式采样偏置：粗 SDF 环境编码 + 单隐层 MLP 手写前向/反向，专家蒸馏 (9.2)（在线 rrt 路径）+ 建议点代替均匀采样 (9.1)（复用 rrt 的 steer/碰撞检测） | 7 |
 | [metrics.py](metrics.py) | 评估层（—） | [METRICS.md](METRICS.md) | 规划成功率 (M.1) / 路径长度 (M.2) / 轨迹代价 (M.3)——CONSTRAINTS §4.7 点名的三指标基线（纯函数） | 7 |
 
 ## 运行示例（规划 → 优化 → 控制 → 安全，一条走廊串起四章）
@@ -66,7 +67,9 @@ print(res.success, round(res.cost, 3), round(path_length(res.path), 3))
 |------|-------------|---------|
 | MuJoCo 物理仿真 / 接触动力学 | 需要重依赖与场景资产，超出纯 NumPy 边界 | 被控对象统一为可手推的 2D 双积分器与平面 2R 臂；接触动力学见教程第 06/09 章 |
 | 腿式控制（Crocoddyl 多接触、WBC） | 需浮动基动力学与接触求解器 | 教程第 04/09 章推导导读；`ilqr.py` 覆盖同一递推结构在浮点平面系统上的形态 |
-| 学习式腿控 / GPU 大规模 RL | 需 torch + 大规模并行仿真 | `ppo_lite.py` 保留 PPO 全部算法结构（手写前向/反向），网络容量换可读性 |
+| MPNet 完整两阶段实现 | Enet 点云编码器–解码器与 110 工作空间 × 5000 条专家路径的大规模离线训练工程量大 | **`mpnet_lite.py` 教学代理已建**：固定粗 SDF 编码 + 在线少量 rrt 专家 + 采样偏置 RRT（与原文的逐条差异见该模块 docstring） |
+| RapidLocomotion（特权教师–学生蒸馏，教程 09.2） | 需 GPU RL（IsaacGym 级大规模并行）与高保真地形/域参数仿真 | 教程第 09 章 09.2 推导导读；教师阶段所用的 PPO 结构见 `ppo_lite.py` |
+| SAC（最大熵 off-policy RL） | **未实现**——最大熵 twin-Q 结构不做，PPO 已覆盖学习式控制章节核心 | 精读《SAC》的软 Bellman/重参数化推导 + 教程 08.3；工程实现见 RoboTwin 的 RL 训练器 |
 | PETS 的概率集成模型 | bootstrap 集成 × 概率网络的工程量大 | `mpc_cem.py` 取论文消融的确定性档，CEM 与滚动时域机制完整保留 |
 | 微分平坦 / 最小 snap（教程 04.3） | 平坦性是四旋翼专属结构 | 教程 04.3 的 QP 推导；本项目的轨迹优化以 iLQR 压轴 |
 
@@ -79,10 +82,10 @@ projects/control_planning/
 ├── DEBUG.md             # 调试与测试教程（27 条重点观察变量表）
 ├── METRICS.md           # 测评指标教程（成功率/路径长度/轨迹代价）
 ├── metrics.py           # 统一测评模块（公式 M.1–M.3）
-├── rrt.py | ilqr.py | mpc_cem.py | cbf.py | osc_arm.py | ppo_lite.py
+├── rrt.py | ilqr.py | mpc_cem.py | cbf.py | osc_arm.py | ppo_lite.py | mpnet_lite.py
 │   └── 各算法模块（中文注释含论文式号与教程式号）
 ├── demo.py              # 核心入口冒烟演示（四段，确定性）
-└── tests/test_*.py      # 7 个测试文件 46 个测试，全部支持单点过滤
+└── tests/test_*.py      # 8 个测试文件 53 个测试，全部支持单点过滤
 ```
 
 ## 规范

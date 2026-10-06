@@ -9,7 +9,7 @@
 
 ## 1. 这个项目做什么
 
-**一句话**：把 6 个经典控制/规划算法写成能跑的教学代码——纯 numpy、
+**一句话**：把 7 个经典控制/规划算法写成能跑的教学代码——纯 numpy、
 无任何第三方控制/规划库，每个模块对应教程一章，`tests/` 里每个模块都有
 可直接运行、全定种子的端到端验证。
 
@@ -28,6 +28,7 @@
 | CBF 综述（Ames et al., ECC 2019） | `cbf.py` | 逐周期 QP 把期望控制"掰"进安全集合 | [07 安全控制](../../tutorials/control_planning/07_安全控制控制屏障函数.md) |
 | Khatib（IEEE JRA 1987）/ Hogan（J-DSC 1985） | `osc_arm.py` | 任务空间阻抗控制（末端 = 弹簧-阻尼） | [06 操作空间控制与阻抗控制](../../tutorials/control_planning/06_操作空间控制与阻抗控制.md) |
 | PPO（Schulman et al., 2017）/ GAE（Schulman et al., 2016） | `ppo_lite.py` | 截断代理目标的 on-policy 策略迭代 | [08 学习式控制](../../tutorials/control_planning/08_学习式控制强化学习.md) |
+| MPNet（Qureshi et al., ICRA 2019） | `mpnet_lite.py` | 学习式采样偏置：网络建议点 + 经典 RRT 兜底 | [09 前沿学习式规划](../../tutorials/control_planning/09_前沿学习式规划与腿式控制.md) |
 | ——（统一评估） | `metrics.py` | 成功率 / 路径长度 / 轨迹代价 | [METRICS.md](METRICS.md) |
 
 **教学设计的两条主线**：① 被控对象统一为两套可手推的系统——**2D 双积分器**
@@ -42,7 +43,7 @@
 ## 2. 环境与运行
 
 本项目是**纯 numpy** 代码：conda `llm_env` 与系统 python3（numpy ≥ 1.26）
-均已验证通过（46/46 测试，见 [.vscode/SETUP.md](../../.vscode/SETUP.md)），无其他依赖。
+均已验证通过（53/53 测试，见 [.vscode/SETUP.md](../../.vscode/SETUP.md)），无其他依赖。
 
 ```bash
 conda activate llm_env            # 或任意 numpy >= 1.26 的环境（系统 python3 亦可）
@@ -65,6 +66,7 @@ python tests/test_cbf.py          #  6/6 tests passed.    ~1.0 s   （CBF 安全
 python tests/test_mpc_cem.py      #  6/6 tests passed.    ~4.4 s   （CEM-MPC）
 python tests/test_rrt.py          #  7/7 tests passed.    ~5.6 s   （RRT / RRT*）
 python tests/test_ppo_lite.py     #  6/6 tests passed.   ~19.9 s   （微型 PPO）
+python tests/test_mpnet.py        #  7/7 tests passed.    ~1.4 s   （MPNet 采样偏置；系统 python3 ~4.2 s）
 ```
 
 全局一次跑完（在仓库根目录）：
@@ -72,7 +74,7 @@ python tests/test_ppo_lite.py     #  6/6 tests passed.   ~19.9 s   （微型 PPO
 ```bash
 cd /home/dzxu/RoboTwinTutorial    # 仓库根
 python -m pytest projects/control_planning/tests -v
-# 预期：46 passed（llm_env 约 31 s；系统 python3 约 33 s）
+# 预期：53 passed（llm_env 约 33 s；系统 python3 约 39 s）
 ```
 
 每个测试文件都支持**单点过滤**（传测试名子串，详见 [DEBUG.md](DEBUG.md) §1）：
@@ -91,7 +93,7 @@ python demo.py    # 打印对齐表格：RRT*/iLQR/CEM-MPC/CBF 的健康值
 
 ## 3. 目标输入与输出（最小可运行示例）
 
-以下 7 段片段**每段都实际运行验证过**（输出为确定性复现值）。统一前提：
+以下 8 段片段**每段都实际运行验证过**（输出为确定性复现值）。统一前提：
 `cd projects/control_planning` 后在 Python 交互环境或 `python -c` 中执行。
 各模块的输入都是内存中的 numpy 数组（形状/单位随段说明），无文件 I/O。
 
@@ -225,7 +227,38 @@ print("greedy final err = %.4f m" % np.linalg.norm(obs[:2] - env.goal))
 实测输出：`return: -39.75 -> -9.53 (4.2x)`、`greedy final err = 0.0838 m`
 （学到的线性策略 ≈ PD 律 kp·e − kd·v，接近手工 PD 的 −8.9 量级）。
 
-### 3.7 metrics —— 统一评估（[METRICS.md](METRICS.md)）
+### 3.7 mpnet_lite —— 学习式采样偏置（教程 09）
+
+输入：无文件 I/O（训练数据 = `rrt.plan_rrt` 在 40 个随机环境在线解出的
+路径中间点）；`train_mpnet` 输出偏置网络与蒸馏损失曲线；`plan_rrt_biased`
+以概率 `p_bias` 用网络建议点代替均匀采样（`p_bias=0` 即均匀对照臂）。
+
+```python
+import numpy as np
+from mpnet_lite import make_random_env, plan_rrt_biased, train_mpnet
+
+params, hist = train_mpnet(seed=0)      # 在线专家数据（rrt.py 解 40 个随机环境）+ 训练（~4 s）
+print("distill loss (9.2): %.4f -> %.4f" % (hist[0], hist[-1]))
+uni_all, bias_all = [], []
+for env_seed in (101, 102, 103, 104):   # 训练未见过的随机环境（泛化口径）
+    start, goal, obstacles = make_random_env(seed=env_seed)
+    for plan_seed in (0, 1):
+        uni = plan_rrt_biased(start, goal, obstacles, (0.0, 10.0, 0.0, 10.0),
+                              params, p_bias=0.0, seed=plan_seed)
+        bias = plan_rrt_biased(start, goal, obstacles, (0.0, 10.0, 0.0, 10.0),
+                               params, p_bias=0.5, seed=plan_seed)
+        uni_all.append(uni.n_iters)
+        bias_all.append(bias.n_iters)
+print("iters: uniform %.1f vs biased %.1f (ratio %.2f)"
+      % (np.mean(uni_all), np.mean(bias_all), np.mean(bias_all) / np.mean(uni_all)))
+```
+
+实测输出：`distill loss (9.2): 2.6111 -> 0.1082`、
+`iters: uniform 109.4 vs biased 86.0 (ratio 0.79)`（建议点让 RRT 的平均
+求解迭代数降到 ~79%，且 8 组逐配对全部不劣于均匀臂；网络建议点的自由
+空间比率 0.938 vs 均匀采样 0.868，见 tests/test_mpnet.py）。
+
+### 3.8 metrics —— 统一评估（[METRICS.md](METRICS.md)）
 
 输入：轨迹 list[(N, 2)] 或 (N, 2)（m）、目标 (2,)、障碍列表、容差（m）；
 输出标量指标。
@@ -325,7 +358,18 @@ print("traj_cost    =", round(trajectory_cost(hit, u, dt=0.1), 4))
 | rollout dict | — | `obs (T,6)`、`act (T,2)`、`logp (T,)`、`reward (T,)`、`value (T,)`、`last_obs (6,)` | — |
 | `compute_gae` 返回 | (T,) ×2 | 优势估计 Â 与价值回归目标 returns = Â + V | — |
 
-### 4.7 metrics 的公共结构
+### 4.7 mpnet_lite —— 偏置网络与编码（`MLPParams` / 编码与建议点）
+
+| 项 | 形状 | 含义 | 单位/取值 |
+|----|------|------|-----------|
+| `MLPParams.W1 / b1` | (4+k², H) / (H,) | 输入→隐层权重与偏置（tanh 隐层；默认 k=16、H=32） | 混合 |
+| `.W2 / .b2` | (H, 2) / (2,) | 隐层→输出（建议的下一采样点偏移） | m |
+| `sdf_grid` 返回 | (k²,) | 障碍的粗 SDF 网格编码（[-1,1]，负 = 格心在障碍内；替代 Enet） | 无量纲 |
+| `make_inputs` 返回 | (N, 4+k²) | 输入批 = (当前点/s, 目标点/s, SDF 编码)，s = 工作空间对角线 | 混合 |
+| `plan_rrt_biased` 返回 | — | 复用 rrt 的 `PlanResult`（树 + 路径 + 代价 + `n_iters`） | 同 rrt |
+| `train_mpnet` 返回 | (params, history) | 权重与蒸馏损失曲线（长度 = epochs+1） | — |
+
+### 4.8 metrics 的公共结构
 
 | 项 | 形状 | 含义 |
 |----|------|------|
@@ -365,6 +409,10 @@ print("traj_cost    =", round(trajectory_cost(hit, u, dt=0.1), 4))
 | ppo_lite | 策略梯度定理的轨迹形式（式 8.5/8.7，reward-to-go） | `ppo_lite.py::policy_gradient_estimate` |
 | ppo_lite | 截断代理目标（式 8.12，(8.9) 重要性比率 + clip 掩码） | `::ppo_update`（`ratio / masked`） |
 | ppo_lite | GAE（式 8.13–8.15：TD 残差的 (γλ)ˡ 反向递推） | `::compute_gae` |
+| mpnet_lite | 障碍的粗 SDF 编码（论文式 (1) Enet 的固定特征替代） | `mpnet_lite.py::sdf_grid` |
+| mpnet_lite | MSE 蒸馏损失（论文式 (2)/教程 (9.2)）与手写反向 | `::mse_loss_grad`（`::train_mpnet` Adam 外层） |
+| mpnet_lite | 建议点 = 条件均值 + 高斯抖动，以概率 p 代替均匀采样（教程 (9.1)） | `::plan_rrt_biased`（采样分支）/ `::propose_points` |
+| mpnet_lite | steer (3.3) 与增量碰撞检测 (3.4)（复用经典底座） | 复用 `rrt.steer / rrt.segment_free` |
 | metrics | 规划成功率（M.1）/ 路径长度（M.2）/ 轨迹代价（M.3） | `metrics.py::success_rate / ::path_length / ::trajectory_cost` |
 
 ---
@@ -373,8 +421,9 @@ print("traj_cost    =", round(trajectory_cost(hit, u, dt=0.1), 4))
 
 依赖方向如实取自各模块的 import 关系（箭头 = "复用"）：`rrt` 自成一体
 （几何 + 随机数即可）；`mpc_cem` 复用 `ilqr` 的双积分器与 `rrt` 的走廊场景
-（被控对象/环境同一套）；`cbf`、`osc_arm`、`ppo_lite` 不依赖库内其他模块；
-全部模块的评估环节取用 `metrics`（纯函数层）。
+（被控对象/环境同一套）；`mpnet_lite` 复用 `rrt` 的 steer/碰撞检测与
+`PlanResult`（学习偏置插在采样分支上）；`cbf`、`osc_arm`、`ppo_lite` 不依赖
+库内其他模块；全部模块的评估环节取用 `metrics`（纯函数层）。
 
 ```mermaid
 flowchart TD
@@ -384,12 +433,14 @@ flowchart TD
     CBF["cbf：安全滤波 (7.9)/(7.13)<br>教程 07"]
     OSC["osc_arm：阻抗控制 (6.12)<br>教程 06"]
     PPO["ppo_lite：策略迭代 (8.12)/(8.15)<br>教程 08"]
+    MPNET["mpnet_lite：学习采样偏置 (9.1)/(9.2)<br>教程 09"]
     METRICS["metrics.py：成功率/路径长/代价 (M.1)–(M.3)<br>被各模块评估环节调用"]
     DEMO["demo.py：四段冒烟（规划→优化→控制→安全）"]
 
     ILQR --> RRT
     MPC --> ILQR
     MPC --> RRT
+    MPNET --> RRT
     DEMO --> RRT
     DEMO --> ILQR
     DEMO --> MPC
@@ -397,12 +448,15 @@ flowchart TD
     DEMO --> METRICS
     RRT --> METRICS
     MPC --> METRICS
+    MPNET --> METRICS
 ```
 
 一次典型"全主线"阅读路径（与[教程 README](../../tutorials/control_planning/README.md) 的
 章节顺序一致）：`rrt`（03）→ `ilqr`（04，注意它同时是第 05 章 Riccati 的
 非线性推广）→ `mpc_cem`（05）→ `osc_arm`（06）→ `cbf`（07，套在任意
-u_des 外层）→ `ppo_lite`（08）→ `metrics`（各处评估）→ `demo.py`（全串起来）。
+u_des 外层）→ `ppo_lite`（08）→ `mpnet_lite`（09，学习偏置插回 03 的
+采样分支——混合范式的最小实例）→ `metrics`（各处评估）→ `demo.py`
+（全串起来）。
 
 ---
 
@@ -429,7 +483,7 @@ u_des 外层）→ `ppo_lite`（08）→ `metrics`（各处评估）→ `demo.py
 pytest 写法：`pytest tests/test_cbf.py -k projection -v`。
 
 **Q4：numpy 版本差异会影响结果吗？**
-`llm_env`（numpy 2.2.6）与系统 python3（1.26.4）全部 46 个测试均通过，且
+`llm_env`（numpy 2.2.6）与系统 python3（1.26.4）全部 53 个测试均通过，且
 打印数字当前逐位一致。历史上 iLQR 的**收敛轮数**曾出现跨解释器 2–3 轮的
 浮动——浮点求和顺序差异使相对下降在 1e-6 阈值附近的穿越轮次不同，最终
 J 一致（详见 [DEBUG.md](DEBUG.md) §4 案例 4）。因此本项目对迭代数只断言
@@ -448,5 +502,7 @@ DLS 与阻抗控制的全部结构。算法的**结构**（递推、约束、采
 探索性）；`w_obs / r_safe`（mpc_cem）：出现擦碰 → 加大（默认 2000 / 0.6）；
 `alpha / kappa`（cbf）：贴边太近 → 加大 α（更早减速）；`damping`（osc_arm）：
 奇异位形附近步长震荡 → 加大；`lr / epochs`（ppo_lite）：回报平台太高 → 加
-epochs，发散 → 减 lr。更多排障与断点技巧：[DEBUG.md](DEBUG.md)；
+epochs，发散 → 减 lr；`p_bias / jitter`（mpnet_lite）：偏置反而变慢 → 降
+p_bias 或加 jitter（默认 0.5/0.5），建议点频频撞墙 → 加大 k（编码分辨率，
+须与训练一致）。更多排障与断点技巧：[DEBUG.md](DEBUG.md)；
 指标健康值：[METRICS.md](METRICS.md)。

@@ -35,6 +35,27 @@ SAC v2 版本差异等）在文中加勘误注。
 | [SAC](SAC_ICML2018.md) | SAC（ICML 2018） | 最大熵 off-policy：软 Bellman 与重参数化（式 (1)–(13)） | [08](../08_学习式控制强化学习.md) §08.3 |
 | [Rapid Locomotion](RapidLocomotion_RSS2022.md) | Rapid Locomotion（RSS 2022） | 特权教师 + 隐空间蒸馏的腿式盲控制 | [09](../09_前沿学习式规划与腿式控制.md) §09.2 |
 
+## 论文 × 代码状态（projects/control_planning）
+
+9 篇精读在 [projects/control_planning/](../../../projects/control_planning/README.md)
+的落地状态：✅ = 代码覆盖论文核心主张；🔶 = 简化档（保留主算法结构，去工程重件）；
+❌ = 未实现（读推导，代码看替代品）。评估指标统一取自该项目的 `metrics.py`。
+
+| 精读 | 状态 | 代码 | 说明 |
+|------|------|------|------|
+| [RRT](RRT_TR1998.md) | ✅ | [rrt.py](../../../projects/control_planning/rrt.py) | steer、增量碰撞检测、goal bias 全覆盖（教程 (3.3)–(3.4)/(3.11)） |
+| [RRT*](RRTstar_IJRR2011.md) | ✅ | [rrt.py](../../../projects/control_planning/rrt.py) | 选父 + 重布线 + 收缩半径 γ(log n/n)^(1/d)（Theorem 38） |
+| [PPO](PPO_arXiv2017.md) | ✅ | [ppo_lite.py](../../../projects/control_planning/ppo_lite.py) | GAE + 截断代理目标全结构（手写前向/反向） |
+| [CBF 综述](CBF-Survey_ECCV2019.md) | ✅ | [cbf.py](../../../projects/control_planning/cbf.py) | CBF-QP 闭式投影 (7.13) + 多约束 POCS |
+| [Crocoddyl](Crocoddyl_ICRA2020.md) | 🔶 | [ilqr.py](../../../projects/control_planning/ilqr.py) | iLQR 是其 DDP 求解器的简化核心；多接触解析导数与 FDDP 不做 |
+| [PETS](PETS_NeurIPS2018.md) | 🔶 | [mpc_cem.py](../../../projects/control_planning/mpc_cem.py) | 已知动力学简化档（论文消融的确定性档）；概率集成模型不做 |
+| [MPNet](MPNet_ICRA2019.md) | 🔶 | [mpnet_lite.py](../../../projects/control_planning/mpnet_lite.py) | 采样偏置教学代理：粗 SDF 编码替代 Enet、在线少量 rrt 专家替代大规模离线训练；完整两阶段编码器与双向重规划不做 |
+| [SAC](SAC_ICML2018.md) | ❌ | —— | 最大熵 / twin-Q 结构未实现，PPO（`ppo_lite.py`）已覆盖学习式控制章节核心；软 Bellman/重参数化推导见精读 |
+| [Rapid Locomotion](RapidLocomotion_RSS2022.md) | ❌ | —— | 需 GPU RL（IsaacGym 级大规模并行）与高保真仿真；特权蒸馏推导见教程 09.2 精读 |
+
+（另有 `osc_arm.py` 对应延伸阅读条目 Khatib/Hogan——无 PDF 故无精读，
+见下方注。）
+
 ## 建议阅读顺序
 
 - **按教程主线**：[十章教程](../README.md) 03 章 ↔ RRT/RRT* 精读 → 04 章 ↔ Crocoddyl →
