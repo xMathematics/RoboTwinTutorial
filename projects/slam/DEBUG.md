@@ -9,15 +9,16 @@
 
 ## 1. 环境与两种测试
 
-**解释器**：本项目纯 numpy，两套解释器均验证通过（80/80）——
+**解释器**：本项目纯 numpy，两套解释器均验证通过（87/87）——
 
 | 解释器 | numpy | 全套件耗时（实测） |
 |--------|-------|--------------------|
-| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | ~9.5 s |
-| 系统 `python3` | 1.26.4 | ~16.5 s |
+| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | ~19 s |
+| 系统 `python3` | 1.26.4 | ~21 s |
 
-任选其一即可；VS Code 默认指向 `llm_env`（见 SETUP.md §2）。唯一与版本相关的
-容差注记见 §1.3 的"droidlite 交叉验证"。
+（耗时随机器负载明显波动，量级参考即可。）任选其一即可；VS Code 默认指向
+`llm_env`（见 SETUP.md §2）。唯一与版本相关的容差注记见 §1.3 的
+"droidlite 交叉验证"。
 
 ### 1.1 单点测试（改了一个模块 → 用它）
 
@@ -51,7 +52,7 @@ pytest tests/test_fastslam.py -k gate -v                             # -k 子串
 ```bash
 # 仓库根目录：
 cd /home/dzxu/RoboTwinTutorial
-python -m pytest projects/slam/tests -v      # 预期：80 passed
+python -m pytest projects/slam/tests -v      # 预期：87 passed
 # 或在 projects/slam 下逐文件直跑（不依赖 pytest）：
 cd projects/slam
 for f in tests/test_*.py; do python3 "$f"; done
@@ -107,6 +108,9 @@ for f in tests/test_*.py; do python3 "$f"; done
 | `loam2d/loam2d.py::_solve_point_to_line`（~L455 `cond = np.linalg.cond(...)`） | 条件数与 `healthy` 判定（变量表 L-1/L-2） |
 | `droidlite/droidlite.py::DenseBA._schur_step`（~L443 `C = np.einsum(...)`） | 深度对角块 `C`、消元后的 `dxi/drho`（变量表 D-3） |
 | `droidlite/droidlite.py::DenseBA.solve`（~L531 逐轮循环尾） | `pose_rmse` 单调性（变量表 D-1） |
+| `ptam/ptam.py::Ptam.process_frame`（~L1035 `want_kf = (...)`） | 视差/平移判据的逐帧取值与关键帧触发（变量表 T-1） |
+| `ptam/ptam.py::local_ba`（~L585/607 `rmse0/rmse1 = _rmse(...)`） | BA 前后窗口重投影 RMSE 与 `converged`（变量表 T-2/T-3） |
+| `ptam/ptam.py::track_frame`（~L267 内点统计处） | 内点率与内点重投影 RMSE（变量表 T-4） |
 
 ---
 
@@ -114,7 +118,7 @@ for f in tests/test_*.py; do python3 "$f"; done
 
 约定：**形状**为断点处的 numpy 形状；**健康值**为基准场景（测试定种子）实测；
 **异常信号**出现即有 bug 或配置错误。分组编号 F(astslam)/P(reint)/V(ins)/
-B(A 光度)/L(oam)/D(roid)/E(pipolar)/C(ore)。
+B(A 光度)/L(oam)/D(roid)/E(pipolar)/C(ore)/T(ptam)。
 
 ### F：fastslam（断点 `fastslam/fastslam.py`）
 
@@ -176,6 +180,17 @@ B(A 光度)/L(oam)/D(roid)/E(pipolar)/C(ore)。
 | D-2 | `_solve_ba_increment` ~L483 | `lam` | 内层 LM 阻尼 | 接受 ÷10、拒绝 ×10（上限 1e10） | 频繁拒绝 → 光流测量与几何矛盾 |
 | D-3 | `_schur_step` ~L443 | `C` | 深度块（对角）(N,) = 列范数平方 + λ | 全部 > 0 | 有 0/negative → 对应列全零（该像素无任何有效观测，`valid` 掩码漏了） |
 | D-4 | 交叉验证（`tests/test_droidlite.py` 打印） | Schur vs 稠密解差 | `max|Schur - dense|`（标量） | 单步 ~1e-10；完整求解 ρ 差 9.1e-7、位姿差 4.3e-7（**< 1e-5**，numpy 版本敏感点见 §1.3） | > 1e-2 → 消元实现错（Eq.(5)） |
+
+### T：ptam（断点 `ptam/ptam.py`；基准 = `simulate_planar_scene(seed=0)`，36 帧）
+
+| # | 断点 / 来源 | 变量 | 含义（形状） | 健康值 | 异常信号 |
+|---|-------------|------|--------------|--------|----------|
+| T-1 | `process_frame` ~L1035 | `parallax` / `dist` / `med_depth` / `frames_since_kf` | 与最近关键帧的平均视差（标量，deg）/ 光心最近距离（标量，m）/ 跟踪点中位深度（标量，m）/ 距上次关键帧的帧数（int） | 基准轨迹视差 ~1.2 度/帧、`dist ~ 0.07×med_depth`/帧；每 ~3 帧触发一次插入，36 帧 **12 个关键帧**（帧号差 ≥ 3） | 每帧都插 → `key_min_parallax_deg`/`key_min_dist_frac` 过松；全程不插 → 阈值过紧或场景无纹理（`status="no-measurements"`） |
+| T-2 | `local_ba` ~L585 | `rmse0` | BA 前窗口（含固定集 Y 观测）重投影 RMSE（标量，px） | 首两次 BA ~0.7–0.8 px，其后 ~0.6 px | > 5 px → 关键帧位姿/三角化初值坏（查 `track_frame` 收敛与手性过滤） |
+| T-3 | `local_ba` ~L607 | `rmse1` / `converged` | BA 后 RMSE（标量，px）/ 收敛标志 | **≤ rmse0**：前两次降 ~30%/37%，地图收敛后 ~3–10%（`tests/test_ptam.py` 打印逐次改进） | rmse1 > rmse0 → 雅可比/对应错（`ba_terms` 的有限差分校验会先红）或 Huber 宽度失配 |
+| T-4 | `track_frame` ~L267 | `inlier` / `rmse`（即 `TrackResult.inlier_ratio / reproj_rmse`） | 重投影 < `gate_px` 的对应比例 / 内点 RMSE（标量） | 教学数据无外点：内点率 **1.00**；RMSE ~0.6–0.9 px（0.5 px 像素噪声的地板） | 内点率 < 0.9 → 关联错或地图退化；RMSE > 1.5 px → 地图/位姿坏 |
+| T-5 | `process_frame` ~L1027 | `n_tracked`（`FrameLog.n_tracked`） | 与最近关键帧公共且已建图的对应数（int，即 motion-only 求解的 3D-2D 对应数） | 13–29/帧（随共视衰减） | < 6 → `too-few-correspondences`（位姿保持上一帧）；骤降 → 地图停止增长（查 T-1 的关键帧节奏） |
+| T-6 | 端到端（`tests/test_ptam.py` 打印） | `ate`（Sim(3) 对齐后） | ATE（标量，m） | **0.059 m**（3 个种子 0.059/0.079/0.094，门限 0.12） | > 0.3 m → 尺度规范自由度没被 Y 集合钉住（查 `local_ba` 的 `fixed_obs`）或雅可比错 |
 
 ### E：epipolar / direct（评估量在测试里）
 

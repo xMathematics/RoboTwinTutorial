@@ -13,7 +13,7 @@
 | 精读 | 论文（venue） | 一句话内核 | 教程章 | 代码 |
 |------|--------------|-----------|--------|------|
 | [FastSLAM](FastSLAM_AAAI2002.md) | FastSLAM（AAAI 2002） | Rao-Blackwell 粒子滤波：位姿粒子 × 独立路标 EKF | [07](../07_后端-i滤波与增量估计.md) | `fastslam/` |
-| [PTAM](PTAM_ISMAR2007.md) | PTAM（ISMAR 2007） | 跟踪/建图双线程 + 关键帧 BA（现代 SLAM 架构雏形） | [05](../05_视觉里程计-i特征点法.md)、[08](../08_后端-ii图优化与-ba.md) | `epipolar/` |
+| [PTAM](PTAM_ISMAR2007.md) | PTAM（ISMAR 2007） | 跟踪/建图双线程 + 关键帧 BA（现代 SLAM 架构雏形） | [05](../05_视觉里程计-i特征点法.md)、[08](../08_后端-ii图优化与-ba.md) | `ptam/`、`epipolar/` |
 | [ORB-SLAM](ORB-SLAM_TRO2015.md) | ORB-SLAM（T-RO 2015） | 特征点法集大成：三线程 + 共视图 + 本质图回环 | [05](../05_视觉里程计-i特征点法.md)、[08](../08_后端-ii图优化与-ba.md)、[09](../09_回环检测.md) | `epipolar/`、`bowloop/` |
 | [ORB-SLAM2](ORB-SLAM2_TRO2016.md) | ORB-SLAM2（T-RO 2017） | 双目/RGB-D + 稠密地图输出 | [08](../08_后端-ii图优化与-ba.md)、[10](../10_建图与系统实战.md) | —— |
 | [ORB-SLAM3](ORB-SLAM3_TRO2021.md) | ORB-SLAM3（T-RO 2021） | VI 紧耦合 + Atlas 多地图，实战基线 | [10](../10_建图与系统实战.md) | `preint/`、`epipolar/`、`bowloop/` |
@@ -36,6 +36,31 @@
 | [MASt3R-SLAM](MASt3R-SLAM_CVPR2025.md) | MASt3R-SLAM（CVPR 2025） | pointmap 先验 + 免标定增量式重建 | [10](../10_建图与系统实战.md)、[3D 重建 09](../../3d_reconstruction/09_哈希编码与前馈重建.md) | 基础模型先验 |
 | [VGGT-GS SLAM](VGGT-GS-SLAM_arXiv2026.md) | VGGT-GS SLAM（arXiv 2026） | VGGT 前馈先验替代逐对推理的最新路线 | [10](../10_建图与系统实战.md)、[3D 重建 09](../../3d_reconstruction/09_哈希编码与前馈重建.md) | 基础模型先验 |
 
+## 论文 × 代码状态（projects/slam/ 全 18 篇盘点）
+
+**✅ 已实现（9 篇）**——论文核心机制 ↔ 代码模块的一句话对应（式号级对照见各模块 docstring）：
+
+| 论文 | 代码模块 | 核心对应 |
+|------|---------|---------|
+| [FastSLAM](FastSLAM_AAAI2002.md) | [fastslam/](../../../projects/slam/fastslam/) | RB 粒子滤波 = `fastslam.py` 的位姿粒子 × 路标 EKF + 马氏门控 + 系统重采样 |
+| [PTAM](PTAM_ISMAR2007.md) | [ptam/](../../../projects/slam/ptam/) | 跟踪/建图双线程 + 关键帧 + 局部 BA = `ptam.py` 的交替阶段（§5 motion-only G-N、§6.2 帧距/视差判据、Eq.(11) X/Y/Z 窗口 BA；前端几何同源 `epipolar/`） |
+| [ORB-SLAM](ORB-SLAM_TRO2015.md) | [epipolar/](../../../projects/slam/epipolar/)、[bowloop/](../../../projects/slam/bowloop/) | 前端 = 八点法 → 手性分解 → DLT 三角化 → PnP（`epipolar`）；回环 = 词袋 + 位姿图优化（`bowloop`） |
+| [LSD-SLAM](LSD-SLAM_ECCV2014.md) | [direct/](../../../projects/slam/direct/) | 半稠密直接法 = 梯度像素筛选 + 光度残差 + SE(3) 流形 G-N |
+| [DSO](DSO_PAMI2018.md) | [photoba/](../../../projects/slam/photoba/) | 滑窗光度 BA = 仿射曝光 (a,b) + 逆深度 + 鲁棒核 |
+| [LOAM](LOAM_RSS2014.md) | [loam2d/](../../../projects/slam/loam2d/) | Eq.(1) 曲率特征 + 点到线配准 + 双速率 odometry/mapping（2D 教学约简） |
+| [IMU 预积分](IMU-Preintegration_TRO2017.md) | [preint/](../../../projects/slam/preint/) | ΔR̃/Δṽ/Δp̃ 递推 + Σ 协方差线性传播 + 偏置一阶修正 |
+| [VINS-Mono](VINS-Mono_RAM2018.md) | [vins/](../../../projects/slam/vins/) | IMU 因子 × 重投影因子紧耦合因子图 + LM 流形求解 + 尺度可观性复现 |
+| [DROID-SLAM](DROID-SLAM_NeurIPS2021.md) | [droidlite/](../../../projects/slam/droidlite/) | 递归稠密 BA 交替结构（GT 光流替代学习网络，无学习组件） |
+
+**❌ 未实现（9 篇）**——一句话原因：
+
+| 论文 | 原因 |
+|------|------|
+| [ORB-SLAM2](ORB-SLAM2_TRO2016.md)、[ORB-SLAM3](ORB-SLAM3_TRO2021.md) | 完整系统工程量远超教学范围；几何与架构核心已由 `epipolar/` + `bowloop/` + `ptam/` 覆盖（见 [projects/slam/README.md 保真度声明](../../../projects/slam/README.md)） |
+| [SLAM 权威综述](SLAM-Survey_TRO2016.md) | 综述无算法，对应教程第 01 章导读 |
+| [NeRF-SLAM](NeRF-SLAM_ICRA2023.md)、[GS-SLAM](GS-SLAM_CVPR2024.md)、[SplaTAM](SplaTAM_CVPR2024.md)、[MonoGS](MonoGS_CVPR2024.md) | 需 GPU 神经渲染器（NeRF/3DGS 可微渲染），本代码库保持纯 numpy |
+| [MASt3R-SLAM](MASt3R-SLAM_CVPR2025.md)、[VGGT-GS SLAM](VGGT-GS-SLAM_arXiv2026.md) | 需 MASt3R/VGGT 基础模型权重推理 |
+
 ## 建议阅读顺序
 
 - **按教程主线**（推荐）：先读 [十章教程](../README.md) 对应章，再读该章映射的论文精读；
@@ -49,7 +74,8 @@
 
 - **教程（../01–10 章）**：按概念组织，五步法推导，面向"学会原理"；
 - **精读（本目录）**：按论文组织，逐篇核对原文式号与实验，面向"读懂论文"；
-- **代码（projects/slam/）**：11 个模块的教学实现，公式 ↔ 函数一一对应（见各模块 docstring 与
+- **代码（projects/slam/）**：12 个模块（含 core 工具层与 metrics 评估层）的教学实现，
+  公式 ↔ 函数一一对应（见各模块 docstring 与
   [DEBUG.md](../../../projects/slam/DEBUG.md) 变量表）。
 
 三者的公式编号可能不同（各章独立编号、论文按原文编号），所有交叉引用均标注来源，回引前已核实。

@@ -23,7 +23,7 @@ python tests/test_core_slam.py
 python demo.py
 ```
 
-- **全局测试**：`python -m pytest tests/ -v`（80 个测试，llm_env 约 9.5s）
+- **全局测试**：`python -m pytest tests/ -v`（87 个测试，llm_env 实测 ~19 s / 系统 python3 ~21 s，随机器负载波动）
 - **单点测试**：`python tests/test_fastslam.py gate`（子串过滤，无匹配会列出可用测试名）
 - VS Code 调试配置见 [.vscode/launch.json](../../.vscode/launch.json)，用法见 [.vscode/SETUP.md](../../.vscode/SETUP.md)
 
@@ -41,6 +41,7 @@ python demo.py
 | [preint/](preint/) | IMU 预积分 (T-RO'17) | 10 | ΔR̃/Δṽ/Δp̃ 递推、Σ 协方差线性传播、偏置一阶修正（−½gΔt² 约定） | 6 |
 | [vins/](vins/) | VINS-Mono (RAM'18) | 10 | 紧耦合 VI 因子图（IMU 因子 + 重投影因子）+ LM 流形求解 + 尺度恢复 | 4 |
 | [droidlite/](droidlite/) | DROID-SLAM (NeurIPS'21) | 10（扩展） | 递归稠密 BA 结构演示（GT 光流替代学习网络）：对应场 ↔ Schur 补 BA 交替 | 5 |
+| [ptam/](ptam/) | PTAM (ISMAR'07) | 05、08、10 | 跟踪/建图双线程架构（教学版为交替阶段）+ 关键帧地图（帧距 + 平移/视差判据）：motion-only G-N 跟踪 + 关键帧局部 BA（Eq.(11) 的 X/Y/Z 三分法） | 7 |
 | [metrics.py](metrics.py) | 评估层（—） | [METRICS.md](METRICS.md) | Umeyama 对齐 ATE、旋转误差、尺度比、RPE（纯函数，公式 M.1–M.5） | 13 |
 
 ## 运行示例（FastSLAM，30 秒上手）
@@ -63,7 +64,7 @@ rmse = float(np.sqrt(np.mean(np.sum((traj - gt) ** 2, axis=1))))
 print(round(rmse, 3), "m")   # 实测 0.221 m；纯航位推算 ~1.57 m
 ```
 
-各模块健康值与指标口径见 [METRICS.md](METRICS.md)；全部 11 段最小示例见
+各模块健康值与指标口径见 [METRICS.md](METRICS.md)；全部 12 段最小示例见
 [TUTORIAL.md](TUTORIAL.md) 第 3 节（已实跑验证）。
 
 ## 保真度声明（哪些论文没有对应代码）
@@ -73,7 +74,7 @@ print(round(rmse, 3), "m")   # 实测 0.221 m；纯航位推算 ~1.57 m
 
 | 论文 | 不实现的原因 | 教学替代 |
 |------|-------------|---------|
-| ORB-SLAM 2 / 3 | 完整系统（多线程、Atlas、VI）工程量远超教学范围 | `epipolar/` + `bowloop/` 覆盖其前端与回环核心；ORB-SLAM3 架构对应表见教程第 10 章 |
+| ORB-SLAM 2 / 3 | 完整系统（多线程、Atlas、VI）工程量远超教学范围 | 几何核心由 `epipolar/` + `bowloop/` 覆盖（前端 + 回环），关键帧 + 局部 BA 的架构思想由 `ptam/` 覆盖；ORB-SLAM3 架构对应表见教程第 10 章 |
 | SLAM 权威综述（Cadena 2016） | 综述无算法 | 教程第 01 章导读 |
 | NeRF-SLAM / GS-SLAM / SplaTAM / MonoGS | 需 GPU 神经渲染器 | 教程第 10 章 §10.4 路线表；3DGS 见 [3D 重建教程第 08 章](../../tutorials/3d_reconstruction/08_3D高斯泼溅.md) |
 | MASt3R-SLAM / VGGT-GS SLAM | 需 MASt3R/VGGT 基础模型权重 | 同上，"基础模型 + SLAM"路线在教程第 10 章导读 |
@@ -84,12 +85,12 @@ print(round(rmse, 3), "m")   # 实测 0.221 m；纯航位推算 ~1.57 m
 projects/slam/
 ├── README.md            # 本文件
 ├── TUTORIAL.md          # 零基础代码导读（必读入口）
-├── DEBUG.md             # 调试与测试教程（36 条重点观察变量表）
+├── DEBUG.md             # 调试与测试教程（40 条重点观察变量表）
 ├── METRICS.md           # 测评指标教程（ATE/RPE/尺度比 …）
 ├── metrics.py           # 统一测评模块
-├── core|fastslam|epipolar|bowloop|direct|photoba|loam2d|preint|vins|droidlite/
+├── core|fastslam|epipolar|bowloop|direct|photoba|loam2d|preint|vins|droidlite|ptam/
 │   └── *.py             # 各模块（中文注释含论文式号与教程式号）
-└── tests/test_*.py      # 11 个测试文件，全部支持单点过滤
+└── tests/test_*.py      # 12 个测试文件，全部支持单点过滤
 ```
 
 ## 规范

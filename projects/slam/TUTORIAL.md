@@ -8,7 +8,7 @@
 
 ## 1. 这个项目做什么
 
-**一句话**：把 9 篇经典 SLAM 论文的核心算法写成能跑的教学代码——纯 numpy、
+**一句话**：把 10 篇经典 SLAM 论文的核心算法写成能跑的教学代码——纯 numpy、
 无任何第三方 SLAM 库，每个模块对应教程一章，`tests/` 里每个模块都有可直接
 运行、全定种子的端到端验证。
 
@@ -17,7 +17,7 @@
 "边走边建图"的同时确定"我在哪"——这两个问题互为前提，SLAM 把它们放进
 同一个概率估计框架里联立求解（[教程第 01 章](../../tutorials/slam/01_SLAM问题定义与全景.md)）。
 
-**原理概览**：9 个算法模块按"前端（运动估计）→ 后端（优化）→ 回环 →
+**原理概览**：10 个算法模块按"前端（运动估计）→ 后端（优化）→ 回环 →
 多传感器融合"的脉络组织，每篇论文一个目录；`core/` 是它们共用的数学地基。
 
 | 论文 | 模块（目录） | 核心机制 | 教程章 |
@@ -31,6 +31,7 @@
 | IMU 预积分（Forster et al., T-RO 2017） | `preint/` | 流形预积分测量 | [10](../../tutorials/slam/10_建图与系统实战.md) §10.2 |
 | VINS-Mono（Qin et al., RA-L 2018） | `vins/` | 视觉惯性紧耦合因子图 | [10](../../tutorials/slam/10_建图与系统实战.md) §10.3 |
 | DROID-SLAM（Teed & Deng, NeurIPS 2021） | `droidlite/` | 递归稠密 BA（结构演示，无学习组件） | [10](../../tutorials/slam/10_建图与系统实战.md) 扩展 |
+| PTAM（Klein & Murray, ISMAR 2007） | `ptam/` | 跟踪/建图两阶段 + 关键帧地图 + 局部 BA | [05](../../tutorials/slam/05_视觉里程计-i特征点法.md) / [08](../../tutorials/slam/08_后端-ii图优化与-ba.md) / [10](../../tutorials/slam/10_建图与系统实战.md) |
 | ——（共享工具层） | `core/` | SO(3)/SE(3) 李代数、针孔相机、GN/LM 求解器 | [02](../../tutorials/slam/02_三维刚体运动旋转与位姿.md) / [03](../../tutorials/slam/03_概率状态估计基础.md) / [04](../../tutorials/slam/04_相机模型与特征提取.md) / [05](../../tutorials/slam/05_视觉里程计-i特征点法.md) / [08](../../tutorials/slam/08_后端-ii图优化与-ba.md) |
 | ——（统一评估） | `metrics.py` | ATE / RPE / 尺度比 / 旋转误差 | [METRICS.md](METRICS.md) |
 
@@ -72,6 +73,7 @@ python tests/test_vins.py         #  4/4 tests passed.     ~1.2 s   （视觉惯
 python tests/test_direct.py       #  7/7 tests passed.     ~2.3 s   （半稠密直接法）
 python tests/test_photoba.py      #  4/4 tests passed.     ~4.5 s   （光度 BA）
 python tests/test_droidlite.py    #  5/5 tests passed.     ~6.5 s   （递归稠密 BA）
+python tests/test_ptam.py         #  7/7 tests passed.     ~1.9 s   （PTAM 双线程架构）
 ```
 
 全局一次跑完（在仓库根目录）：
@@ -79,7 +81,7 @@ python tests/test_droidlite.py    #  5/5 tests passed.     ~6.5 s   （递归稠
 ```bash
 cd /home/dzxu/RoboTwinTutorial    # 仓库根
 python -m pytest projects/slam/tests -v
-# 预期：80 passed（系统 python3 约 16 s；llm_env 约 10 s）
+# 预期：87 passed（系统 python3 约 21 s；llm_env 约 19 s；随机器负载波动）
 ```
 
 每个测试文件都支持**单点过滤**（传测试名子串，详见 [DEBUG.md](DEBUG.md) §1）：
@@ -92,7 +94,7 @@ python tests/test_fastslam.py gate     # 预期：1/1 tests passed.（只跑名�
 
 ## 3. 目标输入与输出（最小可运行示例）
 
-以下 11 段片段**每段都实际运行验证过**（输出为确定性复现值）。统一前提：
+以下 12 段片段**每段都实际运行验证过**（输出为确定性复现值）。统一前提：
 `cd projects/slam` 后在 Python 交互环境或 `python -c` 中执行。各模块的输入
 都是内存中的 numpy 数组（形状/单位随段说明），无文件 I/O。
 
@@ -376,6 +378,41 @@ print("RPE(d=1) =", rpe_translation(traj_est, traj_gt, delta=1), "m")
 `ATE RMSE = 1.8e-15 m`（对齐后形状完全一致）、`scale_ratio = 0.9`（尺度比在
 对齐*前*独立说话）、`RPE(d=1) = 0.0107 m`。
 
+### 3.12 ptam —— 跟踪/建图两阶段 + 关键帧局部 BA（教程 05/08/10，PTAM）
+
+输入：`simulate_planar_scene` 产出的逐帧观测（可见路标像素 `(V, 2)` + 路标 id
+`(V,)`，关联按 id 给出——patch 匹配的教学替身）；输出 `PtamResult`：每帧位姿
+`(T, 4, 4)`、跟踪掩码、逐帧 `FrameLog` 诊断、关键帧帧号与终端地图。
+
+```python
+import numpy as np
+from ptam import simulate_planar_scene, run_ptam, camera_center
+from metrics import ate_rmse
+
+scene = simulate_planar_scene(seed=0)                 # 带纹理平面 + 默认轨迹
+out = run_ptam(scene)                                 # 跟踪/建图交替主流程
+gt = np.array([camera_center(T) for T in scene.poses_gt])
+est = np.array([camera_center(T) for T in out.poses])
+ate = ate_rmse(est[out.tracked], gt[out.tracked])     # Sim(3) 对齐吸收单目尺度
+print("keyframes =", out.keyframe_frames.tolist())
+print("tracked =", int(out.tracked.sum()), "/", len(out.tracked), " mapped =", out.n_mapped)
+print("ATE =", round(ate, 4), "m")
+last = out.logs[-1]
+print("last:", last.status, " inlier =", round(last.inlier_ratio, 3),
+      " reproj =", round(last.reproj_rmse, 3), "px")
+imp = [round((l.ba_rmse_before - l.ba_rmse_after) / l.ba_rmse_before, 3)
+       for l in out.logs if l.keyframe and l.ba_rmse_before == l.ba_rmse_before]
+print("BA improvements =", imp)
+```
+
+实测输出：`keyframes = [0, 4, 7, 10, 13, 16, 19, 22, 25, 28, 31, 34]`（§6.2
+帧距 + 平移/视差判据）、`tracked = 31 / 36  mapped = 48`（路标在第二个观测
+到它的关键帧入图时才获得深度）、`ATE = 0.0864 m`、`last: tracked  inlier =
+1.0  reproj = 0.599 px`（0.5 px 像素噪声的 RMSE 地板量级）、`BA improvements
+= [0.295, 0.368, 0.096, 0.083, 0.053, 0.037, 0.032, 0.025, 0.033, 0.034]`
+（每次局部 BA 都把窗口重投影 RMSE 压低；地图收敛后改进趋缓——BA 不是
+免费午餐，它把误差换成一致性）。
+
 ---
 
 ## 4. 数据结构
@@ -480,6 +517,21 @@ print("RPE(d=1) =", rpe_translation(traj_est, traj_gt, delta=1), "m")
 | `GNSolution` | — | `x (n,)` 最优参数、`cost` 加权代价、`n_iters`、`converged` |
 | `metrics` 输入轨迹 | (N, 3) | 估计/真值位置逐帧对应，单位 m；步长 (N-1,) |
 
+### 4.9 ptam —— 关键帧地图与逐帧日志（`Ptam` / `PtamResult`）
+
+| 项 | 形状 | 含义 | 单位/取值 |
+|----|------|------|-----------|
+| `KeyFrame.T_cw` | (4, 4) | 关键帧 world-to-camera 位姿（第 0 帧恒为 I，BA 的 datum 锚点；局部 BA 就地更新） | m, rad |
+| `KeyFrame.ids / uv` | (V,) / (V, 2) | 该帧观测的路标全局 id 与像素（关联按 id 给出） | — / px |
+| `Ptam.points` | (M, 3) | 全量路标数组，**行号 = 路标 id**；未建图行为 NaN（第二个观测关键帧入图时才三角化） | m |
+| `Ptam.point_status` | (M,) | 已建图掩码 | bool |
+| `FrameLog.status` | — | `anchor`/`initialized`/`awaiting-init`/`tracked`/`tracked+keyframe`/`too-few-correspondences`/`no-measurements` | — |
+| `FrameLog.pose` | (4, 4) | 该帧位姿（跟踪失败/无观测帧保持上一帧位姿） | m, rad |
+| `FrameLog.inlier_ratio / reproj_rmse` | 标量 | 跟踪内点率 / 内点重投影 RMSE（px，论文 §5.6 跟踪质量指标） | — / px |
+| `FrameLog.ba_rmse_before / after` | 标量 | 本帧局部 BA 前 / 后的窗口重投影 RMSE（未跑 BA 为 NaN） | px |
+| `FrameLog.parallax_deg` | 标量 | 与最近关键帧的平均视差（关键帧判据的物理量） | deg |
+| `PtamResult.poses / tracked` | (T, 4, 4) / (T,) | 逐帧位姿与有效跟踪掩码（ATE 只在掩码内评估） | m, rad / bool |
+
 ---
 
 ## 5. 计算公式
@@ -514,6 +566,9 @@ print("RPE(d=1) =", rpe_translation(traj_est, traj_gt, delta=1), "m")
 | loam2d | 协方差特征值直线对应 `λ1/λ2 ≥ min_linearity`（论文 §VI） | `::register_scan_to_map` |
 | droidlite | DBA 目标 `E = Σ‖r_ij·p_ij - π(G'π⁻¹(p_i, d'_i))‖²`（论文 Eq.(4)） | `droidlite/droidlite.py::DenseBA.residuals` |
 | droidlite | Schur 补正规方程 `Δξ = [B - EC⁻¹Eᵀ + λI]⁻¹(v - EC⁻¹w)`（论文 Eq.(5)） | `::DenseBA._schur_step` |
+| ptam | motion-only 跟踪：`e = u - π(TX)`（教程 (8.1)/(8.10)，论文 §5/Eq.(8)-(9) 的 Huber 替身） | `ptam/ptam.py::track_frame` |
+| ptam | 关键帧判据：帧距 ≥ 3 且（平移 > 0.1×中位深度 或 视差 ≥ 3°）（论文 §6.2） | `::Ptam.process_frame` |
+| ptam | 局部 BA：Eq.(11) 的 X/Y/Z 三分法（Y 位姿冻结只贡献点块）+ 稠密联合 G-N + 流形重线性化（教程 (8.2)/(8.5)/(8.9)） | `::local_ba` / `::ba_terms` |
 | metrics | ATE RMSE（式 M.2，Umeyama 对齐 M.1 前置）；RPE（式 M.5）；尺度比（式 M.4） | `metrics.py::ate_rmse` / `::rpe_translation` / `::scale_ratio` |
 
 ---
@@ -523,7 +578,9 @@ print("RPE(d=1) =", rpe_translation(traj_est, traj_gt, delta=1), "m")
 依赖方向如实取自各模块的 import 关系（箭头 = "复用"）：`fastslam` 与 `bowloop`
 **不依赖 core**（2D 平面三角函数 / 纯词袋机制自成一体）；`vins` 复用 `preint`
 的预积分与 `epipolar` 的三角化；`photoba`、`droidlite` 复用 `direct` 的场景合成
-与投影雅可比；`loam2d` 只取 `core.solver` 的 GN/LM。
+与投影雅可比；`loam2d` 只取 `core.solver` 的 GN/LM；`ptam` 取 `core` 的
+SE(3)/相机/求解器并复用 `epipolar` 的八点法、手性分解、三角化与重投影雅可比
+（初始化 §6.1 与跟踪 §5 的几何核心同源）。
 
 ```mermaid
 flowchart TD
@@ -535,6 +592,7 @@ flowchart TD
     DROID["droidlite：递归稠密 BA（Schur）<br>教程 10 扩展"]
     VINS["vins：IMU 因子 × 重投影因子 → LM<br>教程 10 §10.3"]
     LOAM["loam2d：特征提取 → 帧间/扫描-地图配准<br>教程 10 扩展"]
+    PTAM["ptam：跟踪(§5) ↔ 关键帧(§6.2) ↔ 局部 BA(§6.3)<br>教程 05/08/10"]
     FASTSLAM["fastslam：粒子滤波 × 逐路标 EKF<br>教程 07（不依赖 core）"]
     BOW["bowloop：词袋检索 → 位姿图优化 (9.8)<br>教程 09（不依赖 core）"]
     METRICS["metrics.py：ATE / RPE / 尺度比<br>被各模块评估环节调用"]
@@ -544,6 +602,8 @@ flowchart TD
     DIRECT --> CORE
     LOAM --> CORE
     METRICS --> CORE
+    PTAM --> CORE
+    PTAM --> EPI
     VINS --> PREINT
     VINS --> EPI
     PHOTOBA --> DIRECT
@@ -553,7 +613,7 @@ flowchart TD
 一次典型"全系统"阅读路径（与[教程 README](../../tutorials/slam/README.md) 的
 学习路径一致）：`core.lie`（02）→ `epipolar`（05）/ `direct`（06）→
 `fastslam`（07）→ `core.solver` + `photoba`（08）→ `bowloop`（09）→
-`preint` + `vins` + `loam2d`（10）→ `droidlite`（前沿）。
+`preint` + `vins` + `loam2d` + `ptam`（10）→ `droidlite`（前沿）。
 
 ---
 
@@ -580,7 +640,7 @@ Reload（`extraPaths` 生效，见 [.vscode/SETUP.md](../../.vscode/SETUP.md)）
 写法：`pytest tests/test_fastslam.py -k gate -v`。
 
 **Q4：numpy 版本差异会影响结果吗？**
-`llm_env`（numpy 2.2.6）与系统 python3（1.26.4）全部 80 个测试均通过。
+`llm_env`（numpy 2.2.6）与系统 python3（1.26.4）全部 87 个测试均通过。
 唯一的版本敏感点是 `tests/test_droidlite.py` 的 Schur/稠密交叉验证：numpy 2.x
 的线性代数实现与 1.26 有 ~1e-6 量级差异（实测 2.17e-6），故该断言容差取
 1e-5——调试时若此项在两个解释器下数字略有不同属预期（真实实现错误通常

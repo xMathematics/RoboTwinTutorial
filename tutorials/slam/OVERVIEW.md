@@ -1,6 +1,6 @@
 # SLAM — 主题总览（论文 / 教程 / 代码）
 
-> 论文库：[papers/slam/](../../papers/slam/README.md)（经典 11 + 前沿 7）｜ 教程：[10 章](README.md)（架构已定）｜ 代码：规划中
+> 论文库：[papers/slam/](../../papers/slam/README.md)（经典 11 + 前沿 7）｜ 教程：[10 章](README.md)（架构已定）｜ 代码：[projects/slam/](../../projects/slam/README.md)（10 个论文模块 + core/metrics 工具层，纯 numpy）
 
 ## 章节与论文对应
 
@@ -26,5 +26,9 @@
 
 ## 代码状态
 
-`projects/slam/` 尚未建立。规划：ORB-SLAM3 数据集实战（第 10 章实战产出）跑通后，
-收录配置文件与"理论↔代码模块"对应表。教材配套代码见 [slambook2](https://github.com/gaoxiang12/slambook2)。
+`projects/slam/` 已建成：10 个论文模块的纯 numpy 教学实现（每个自带确定性测试，
+另有 core 工具层与 metrics 评估层），公式与本章教程逐式对应——第 05 章 → `epipolar/`（对极几何/三角化/PnP）与
+`ptam/`（**PTAM 跟踪/建图双线程 + 关键帧 + 局部 BA**，两线程架构的教学源头）；第 06 章 → `direct/`、`photoba/`；
+第 07 章 → `fastslam/`；第 09 章 → `bowloop/`；第 10 章 → `loam2d/`、`preint/`、`vins/`、
+`droidlite/`。入门导读见 [TUTORIAL.md](../../projects/slam/TUTORIAL.md)，
+指标口径见 [METRICS.md](../../projects/slam/METRICS.md)。教材配套代码见 [slambook2](https://github.com/gaoxiang12/slambook2)。
