@@ -12,6 +12,9 @@
                           教程 4.3 节"光线投射"的自适应步长版）
         -> make_orbit_poses / render_dataset （N 视角外参 + 内参 + 带噪深度图）
         -> sample_scene_surface （包围盒拒绝采样 + 解析投影 = 评测用真值表面点）
+        -> checker_texture / value_noise_texture / render_rgb
+                   （世界坐标程序化纹理 + RGB 渲染，供 plane_sweep 的
+                     平面扫描光度匹配使用，教程第 03 章）
 
 依赖方向：本模块不依赖库内其他模块（仅 numpy + 标准库）；
 ``tsdf.py``、``demo.py`` 与 ``tests/test_scene.py`` 直接调用本模块。
@@ -32,13 +35,16 @@ __all__ = [
     "Plane",
     "Scene",
     "Sphere",
+    "checker_texture",
     "make_demo_scene",
     "make_intrinsics",
     "make_orbit_poses",
     "make_sphere_scene",
     "render_dataset",
     "render_depth",
+    "render_rgb",
     "sample_scene_surface",
+    "value_noise_texture",
 ]
 
 # 球追踪的收敛容差（m）：|sdf| 低于它即认为光线命中表面（深度分辨率量级）。
@@ -487,13 +493,159 @@ def sample_scene_surface(
             continue
         sdfs = sdfs[:, shell]
         # 拼缝歧义剔除：最近与次近 |sdf| 几乎并列（差 < 1e-6）的点不可靠。
-        order = np.argsort(np.abs(sdfs), axis=0)[:2]
-        gap = np.abs(sdfs[order[1], np.arange(len(cand))]
-                     - sdfs[order[0], np.arange(len(cand))])
-        cand = cand[gap > 1e-6]
+        # 单基元场景无拼缝，全部保留（argsort 只有 1 行，跳过该检查）。
+        if sdfs.shape[0] >= 2:
+            order = np.argsort(np.abs(sdfs), axis=0)[:2]
+            gap = np.abs(sdfs[order[1], np.arange(len(cand))]
+                         - sdfs[order[0], np.arange(len(cand))])
+            cand = cand[gap > 1e-6]
         if len(cand):
             out.append(scene.closest_point(cand))
             total += len(out[-1])
     if not out:
         raise RuntimeError("采样失败：band 过小或场景表面不在包围盒内")
     return np.concatenate(out, axis=0)[:n_samples]
+
+
+# ---------------------------------------------------------- 程序化纹理 ----------
+# 本节为 plane_sweep（教程第 03 章平面扫描）提供数据侧支持：多视图立体重建
+# 需要"同一物理表面点在不同视图里颜色一致"的图像，故纹理一律定义为
+# 世界坐标的函数（外参/内参不参与纹理——先渲染深度、再反投影、后查色）。
+
+def checker_texture(
+    points: np.ndarray,
+    cell: float = 0.15,
+    low: float = 0.2,
+    high: float = 0.9,
+) -> np.ndarray:
+    """三维棋盘格纹理：世界坐标按 cell 立方体网格的奇偶着两色（MVS 强纹理基准）。
+
+    颜色 = f(世界坐标)：同一表面点从任何视角查色结果相同——这正是平面扫描
+    （教程 3.1/3.2 节）能靠光度一致性（NCC，(3.4)）恢复深度的前提；格子的
+    高频边界为 NCC 提供"窗口形状"，是弱纹理对照实验的强纹理一侧。
+
+    Args:
+        points: (M, 3) 世界坐标查询点，单位 m。
+        cell: 棋盘格边长，单位 m，取值 > 0。
+        low, high: 两色灰度，无量纲，取值 [0, 1]（灰度图复制到 RGB 三通道）。
+
+    Returns:
+        colors: (M, 3) RGB 颜色，float，范围 [low, high]。
+    """
+    pts = np.asarray(points, dtype=float).reshape(-1, 3)
+    # 三轴格子下标求和的奇偶 = 3D 棋盘着色（与 2D 棋盘同一构造）。
+    parity = np.sum(np.floor(pts / float(cell)), axis=-1) % 2.0
+    gray = low + (high - low) * parity
+    return np.repeat(gray[:, None], 3, axis=-1)
+
+
+def _lattice_hash(ix: np.ndarray, iy: np.ndarray, iz: np.ndarray,
+                  seed: int) -> np.ndarray:
+    """整数格点 -> [0, 1) 的确定性散列（值噪声的格点随机值）。
+
+    SplitMix64 风格的混合（乘大奇数 + 右移异或）：numpy uint64 乘法按
+    2^64 取模回绕，逐位确定——同输入跨平台/跨版本输出一致。
+    """
+    h = (ix.astype(np.uint64) * np.uint64(0x9E3779B97F4A7C15)
+         ^ iy.astype(np.uint64) * np.uint64(0xBF58476D1CE4E5B9)
+         ^ iz.astype(np.uint64) * np.uint64(0x94D049BB133111EB)
+         ^ np.uint64(seed & 0xFFFFFFFFFFFFFFFF))
+    h ^= h >> np.uint64(30)
+    h *= np.uint64(0xBF58476D1CE4E5B9)
+    h ^= h >> np.uint64(27)
+    h *= np.uint64(0x94D049BB133111EB)
+    h ^= h >> np.uint64(31)
+    return (h >> np.uint64(11)).astype(np.float64) / float(2 ** 53)  # [0, 1)
+
+
+def value_noise_texture(
+    points: np.ndarray,
+    cell: float = 0.35,
+    seed: int = 0,
+    low: float = 0.15,
+    high: float = 0.85,
+) -> np.ndarray:
+    """三维值噪声（value noise）纹理：格点随机值的三线性平滑插值（MVS 备选纹理）。
+
+    与棋盘格（锐利边界）对照：值噪声是连续灰度、无规则取向，更接近真实
+    表面外观；同样定义为世界坐标的函数，跨视角查色一致。
+
+    Args:
+        points: (M, 3) 世界坐标查询点，单位 m。
+        cell: 噪声格点间距，单位 m，取值 > 0。
+        seed: 格点散列种子（确定性输出）。
+        low, high: 灰度映射下/上限，无量纲，[0, 1]。
+
+    Returns:
+        colors: (M, 3) RGB 颜色，float，范围 [low, high]。
+    """
+    pts = np.asarray(points, dtype=float).reshape(-1, 3)
+    g = pts / float(cell)                            # 连续格坐标
+    i0 = np.floor(g).astype(np.int64)                # 8 个包围格点
+    f = g - i0
+    # 五次平滑（C2 连续）：s(t) = t^3 (t (6t - 15) + 10)。
+    s = f * f * f * (f * (f * 6.0 - 15.0) + 10.0)
+    val = np.zeros(len(pts))
+    for dx in (0, 1):
+        for dy in (0, 1):
+            for dz in (0, 1):
+                h = _lattice_hash(i0[:, 0] + dx, i0[:, 1] + dy, i0[:, 2] + dz, seed)
+                wgt = ((s[:, 0] if dx else 1.0 - s[:, 0])
+                       * (s[:, 1] if dy else 1.0 - s[:, 1])
+                       * (s[:, 2] if dz else 1.0 - s[:, 2]))
+                val += wgt * h
+    gray = low + (high - low) * val
+    return np.repeat(gray[:, None], 3, axis=-1)
+
+
+def render_rgb(
+    scene: Scene,
+    K: np.ndarray,
+    T_wc: np.ndarray,
+    width: int,
+    height: int,
+    texture,
+    depth: np.ndarray | None = None,
+) -> np.ndarray:
+    """渲染一张 RGB 图：深度（球追踪）+ 反投影 + 世界坐标纹理查色。
+
+    与 ``render_depth`` 共用同一几何（光线路径完全一致，仅多一步着色）：
+    有效像素按深度反投影回世界系（针孔投影的逆，SLAM 教程 (5.10)），颜色
+    = texture(世界坐标)——纹理是世界坐标的函数，故多视角渲染天然满足平面
+    扫描所需的跨视角光度一致性（教程 3.2 节 (3.3)-(3.5)）。
+
+    Args:
+        scene: 被渲染的场景。
+        K: (3, 3) 内参矩阵，单位 px。
+        T_wc: (4, 4) 相机 -> 世界位姿，单位 m / rad。
+        width, height: 图像宽/高，单位 px。
+        texture: 可调用对象，签名 ``texture(points (M,3)) -> colors (M,3)``；
+            例如 :func:`checker_texture` / :func:`value_noise_texture`。
+        depth: 可选，预先算好的深度图 (H, W)（单位 m，无回波 +inf）；
+            None 时内部调用 :func:`render_depth`。
+
+    Returns:
+        image: (height, width, 3) RGB 图，float，范围 [0, 1]；
+               无回波像素为黑色 (0, 0, 0)。
+    """
+    if depth is None:
+        depth = render_depth(scene, K, T_wc, width, height)
+    depth = np.asarray(depth, dtype=float)
+    K = np.asarray(K, dtype=float)
+    fx, fy, cx, cy = K[0, 0], K[1, 1], K[0, 2], K[1, 2]
+    height_d, width_d = depth.shape
+    us, vs = np.meshgrid(np.arange(width_d, dtype=float),
+                         np.arange(height_d, dtype=float))
+    image = np.zeros((height_d, width_d, 3))
+    valid = np.isfinite(depth) & (depth > 0.0)
+    if not valid.any():
+        return image
+    # 反投影（与 tsdf.depth_to_point_cloud 同式，按依赖方向约定就地实现）：
+    # 深度 = 相机系 z，未归一化光线 z 分量为 1 -> 命中点 = z·[(u-cx)/fx, (v-cy)/fy, 1]。
+    z = depth[valid]
+    cam = np.column_stack([(us[valid] - cx) / fx * z,
+                           (vs[valid] - cy) / fy * z, z])
+    R_wc, t_wc = np.asarray(T_wc, dtype=float)[:3, :3], np.asarray(T_wc, dtype=float)[:3, 3]
+    world = cam @ R_wc.T + t_wc
+    image[valid] = np.clip(texture(world), 0.0, 1.0)
+    return image

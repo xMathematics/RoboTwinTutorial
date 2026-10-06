@@ -9,12 +9,12 @@
 
 ## 1. 环境与两种测试
 
-**解释器**：本项目纯 numpy，两套解释器均验证通过（39/39）——
+**解释器**：本项目纯 numpy，两套解释器均验证通过（55/55）——
 
 | 解释器 | numpy | 全套件耗时（实测 `pytest tests/ -q`） |
 |--------|-------|----------------------------------------|
-| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`，pytest 9.1.1） | 2.2.6 | 1.40 s |
-| 系统 `python3`（pytest 7.x） | 1.26.4 | 1.38 s |
+| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`，pytest 9.1.1） | 2.2.6 | 15.5 s |
+| 系统 `python3`（pytest 7.x） | 1.26.4 | 16.6 s |
 
 任选其一即可；VS Code 默认指向 `llm_env`（见 SETUP.md §2）。本项目没有 SLAM/nerf
 那类 SVD/特征分解路径，测试阈值远大于版本间浮点差；demo 的指标在**打印末位**
@@ -51,13 +51,14 @@ pytest tests/test_tsdf.py -k zero -v                                # -k 子串�
 
 ```bash
 cd /home/dzxu/RoboTwinTutorial/projects/3d_reconstruction
-python -m pytest tests/ -q                   # 预期：39 passed（~1.4 s，双环境）
+python -m pytest tests/ -q                   # 预期：55 passed（~16 s，双环境）
 # 或逐文件直跑（不依赖 pytest）：
 for f in tests/test_*.py; do python3 "$f"; done
 ```
 
-各测试文件实测耗时（系统 python3）：`test_scene.py` 0.15 s ｜ `test_tsdf.py` 0.21 s ｜
-`test_marching.py` 1.04 s ｜ `test_metrics.py` 0.11 s。
+各测试文件实测耗时（系统 python3）：`test_scene.py` 0.17 s ｜ `test_tsdf.py` 0.23 s ｜
+`test_marching.py` 1.3 s ｜ `test_metrics.py` 0.15 s ｜ `test_poisson.py` 5.2 s ｜
+`test_plane_sweep.py` 9.8 s ｜ `test_splatting.py` 1.3 s。
 
 ### 1.3 何时用哪个（速查）
 
@@ -66,6 +67,9 @@ for f in tests/test_*.py; do python3 "$f"; done
 | 改了 `tsdf.py`（融合/查询） | 单点：`python tests/test_tsdf.py`；再跑 `tests/test_marching.py`（消费 tsdf 的场） |
 | 改了 `scene.py`（被下游全部依赖） | 先 `tests/test_scene.py`，再全局 |
 | 改了 16 case 表 / 提取核心 | `python tests/test_marching.py table`（穷举表自检）+ 全局 |
+| 改了 `poisson.py`（涂抹/求解/等值面） | `python tests/test_poisson.py fft`（求解器解析对）→ `python tests/test_poisson.py`（球重建端到端） |
+| 改了 `plane_sweep.py`（单应/NCC/取优） | `python tests/test_plane_sweep.py homography`（几何）→ 全文件（深度/置信度/融合） |
+| 改了 `splatting.py`（投影/排序/合成） | `python tests/test_splatting.py analytic`（闭式对照）→ 全文件 |
 | 提交前 | 全局 pytest + VS Code Testing 侧栏全绿 |
 | 怀疑环境差异 | 两个解释器各跑一遍全局；同一环境内重跑应逐位一致，跨环境 demo 指标允许打印末位差（~2e-6 m²，BLAS 求和顺序 × 最近邻并列），差异超出该量级才说明用了未固化的随机性 |
 
@@ -114,13 +118,22 @@ for f in tests/test_*.py; do python3 "$f"; done
 | `metrics.py::chamfer_distance`（L90–91 `d_pq / d_qp`） | 两个单向均值应同量级；悬殊 = 一侧覆盖缺失（E-3） |
 | `metrics.py::f_score`（L171–172 `precision / recall`） | 分清 P/R 各自掉了多少（§4 案例 4） |
 | `demo.py::main`（L60 `volume.integrate(...)`） | 每帧 updated 返回值（T-2）；逐帧应稳定在同一量级 |
+| `poisson.py::rasterize_normal_field`（L120 `wgt = np.exp(...)`） | 涂抹核权重 (K,)：窗口 7³ 内高斯值从 1 衰到 <1%（P-1） |
+| `poisson.py::solve_poisson_fft`（L183 `chi_hat[nonzero] = ...`） | 频域除法一步：`lam` 在零频为 0、其余负值（P-2） |
+| `poisson.py::implicit_from_points`（L259–264 `q_lo/q_hi` → `isolevel`） | 两平台分位数与样本均值水平 γ ≈ 0.5（P-3/P-4） |
+| `plane_sweep.py::plane_homography`（L133 `denom = ...`） | 单应第三行：denom 在视锥内应为正、远离 0（D-1） |
+| `plane_sweep.py::_window_ncc`（L186 `ncc = np.einsum(...)`） | 真实深度处的 NCC 立方体 (H-k+1, W-k+1)：盘内应接近 1（D-2） |
+| `plane_sweep.py::run_plane_sweep`（L253–256 `best / ordered / confidence`） | argmin 深度与二名代价差：盘内 conf 显著大于轮廓带（D-3/D-4） |
+| `splatting.py::splat_render`（L218 `mu_cam = ...`） | 相机系基元坐标：z 应全为正且 ≈ 相机距（世界→相机方向错则 z 乱，§4 案例 2 同源）（G-1） |
+| `splatting.py::splat_render`（L256–263 `expo / alpha / transmittance`） | 逐 splat 的指数场、α 与透射率递推（(8.9)-(8.10) 一步全貌）（G-2/G-3） |
 
 ---
 
 ## 3. 重点观察变量表（核心章节）
 
 约定：**形状**为断点处的 numpy 形状；**健康值**为基准场景（demo / 测试定种子）实测；
-**异常信号**出现即有 bug 或配置错误。分组编号 S(cene)/T(sdf)/M(arching)/E(valuation)。
+**异常信号**出现即有 bug 或配置错误。分组编号 S(cene)/T(sdf)/M(arching)/E(valuation)
+/P(oisson)/D(plane-sweep depth)/G(aussian splatting)。
 
 ### S：scene（断点 `scene.py`）
 
@@ -165,6 +178,32 @@ for f in tests/test_*.py; do python3 "$f"; done
 | E-2 | `f_score` L171–172 | `precision` / `recall` | 阈值内比例，无量纲 | demo：P ≈ R ≈ 0.96；单视角基线 P≈1 / R≈0.315 | P 高 R 低 → 重建"少而准"（视角不足）；P 低 R 高 → 重建"多而糙"（噪声/幽灵面） |
 | E-3 | `demo.py` L75 | `cd` | 端到端 Chamfer，m² | **1.27–1.29e-4**（RMS ≈ 1.1 cm；双环境打印末位差属预期） | > 1e-3 → 幽灵内壁（§4 案例 1）；> 1e-2 → 位姿/内参错 |
 | E-4 | `demo.py` L73 | `rec_points` / `gt_points` | 重建/真值表面点 (8192, 3) 各 | 两者都落在场景包围盒内；gt 的 \|sdf\| < 1e-9 | gt 的 \|sdf\| 大 → `sample_scene_surface` 的 band/seed 改动；rec 飞出包围盒 → 场错 |
+
+### P：poisson（断点 `poisson.py`）
+
+| # | 断点 / 来源 | 变量 | 含义（形状） | 健康值 | 异常信号 |
+|---|-------------|------|--------------|--------|----------|
+| P-1 | `rasterize_normal_field` L120 | `wgt` | 涂抹核权重 (K,)（窗口 7³ 内） | 中心 1、边缘 < 1%（高斯 3σ 截断） | 全 1 → σ 单位错（体素 vs 米）；全 ≈ 0 → 点集离网格太远（pad 不足） |
+| P-2 | `solve_poisson_fft` L183 | `lam` | 拉普拉斯特征值 (n, n, n) | 零频 = 0、其余 < 0（最大 \|λ\| ≈ 12/h²） | 零频非零 → fft 频率序写错；出现正值 → cos 符号错 |
+| P-3 | `implicit_from_points` L259 | `q_lo / q_hi` | 解场两平台分位数（标量各） | q_hi − q_lo ≫ 0（内/外两平台分明） | 两者几乎相等 → 解退化（法向取向不一致/零场） |
+| P-4 | `implicit_from_points` L264 | `isolevel` | 样本均值等值面水平 γ（标量） | ≈ 0.5（实测 0.47；容差 [0.3, 0.7]） | 远离 0.5 → 法向取向混（外向/内向混杂）或点集不在网格内 |
+
+### D：plane sweep（断点 `plane_sweep.py`）
+
+| # | 断点 / 来源 | 变量 | 含义（形状） | 健康值 | 异常信号 |
+|---|-------------|------|--------------|--------|----------|
+| D-1 | `plane_homography` L133 | `denom` | 单应齐次分母 (H, W) | 全部同号且远离 0（视锥内 ≈ d 量级） | 变号/近零 → 深度假设为负或位姿共轭（相机重合） |
+| D-2 | `_window_ncc` L186 | `ncc` | 逐像素窗口 NCC (H-k+1, W-k+1) | 真实深度假设处球盘内 → 接近 1；错误深度 → 明显偏低 | 全图处处低 → 纹理不是世界坐标函数（跨视角不同色）或位姿错 |
+| D-3 | `run_plane_sweep` L253 | `best` / `depth_map` | 最优深度下标/深度 (H, W) | 球盘内与 gt 深度差 < 假设间距×2 | 系统性偏移一个假设以上 → 深度范围不含真值或 H(d) 符号错 |
+| D-4 | `run_plane_sweep` L256 | `confidence` | 二名代价差 (H, W) | 盘内 ≈ 0.03–0.05；轮廓带/背景 ≈ 0（实测 0.045 vs 0.013） | 处处并列（conf ≡ 0）→ 弱纹理（常色场景）；盘内也为 0 → 成本体积全 1（NCC 判别力失效） |
+
+### G：splatting（断点 `splatting.py::splat_render`）
+
+| # | 断点 / 来源 | 变量 | 含义（形状） | 健康值 | 异常信号 |
+|---|-------------|------|--------------|--------|----------|
+| G-1 | L218 | `mu_cam` | 相机系基元坐标 (M, 3) | z 全 > 0 且 ≈ 相机到场景距离（~1.25） | z 出现负值/量级错 → 世界→相机方向写反（R 与 Rᵀ 用反，§4 案例 2 同源） |
+| G-2 | L256 | `expo` | 逐 splat 二次型 (v1−v0, u1−u0) | 中心 0、按椭圆向外增大；bbox 外被截断 | 全图巨大值 → Σ' 病态（忘加低通项 det≈0）；恒 0 → 逆矩阵错 |
+| G-3 | L263 | `transmittance` | 透射率 (H, W) | 盘内 → 0（不透明）、盘外 = 1；随 splat 递推单调降 | 盘外也被降 → α 求值区域越界（bbox 偏移）；不减反增 → (1−α) 写成 α |
 
 ---
 
@@ -217,6 +256,19 @@ for f in tests/test_*.py; do python3 "$f"; done
   （间距 ~1.8 cm）配 tau=20 mm；2000 点时把 tau 放到 50 mm（F@50mm 实测 0.996）。
   这不是 bug，是 F-score 的密度依赖——固定 tau 报告时必须固定采样数。
 
+### 案例 5：plane_sweep 融合点云 Chamfer 异常大（置信度过滤缺失）
+
+- **症状**：扫描深度图喂给 `TSDFVolume` 后，重建球面 Chamfer ~0.036 m²（健康
+  ~0.002），网格在球周围多出一圈碎片壳。
+- **断点**：`plane_sweep.py::run_plane_sweep`（L253–256）与 `D-4` 的 `confidence`。
+- **看什么**：逐像素 argmin 对**每个**像素都有输出——背景与遮挡边界的代价体积
+  全是"并列的最差值 1"，argmin 挑出的深度是纯噪声；这些像素直接进 TSDF 即幽灵
+  深度（背景像素的 conf ≈ 0.001，盘内 ≈ 0.03–0.05，分界清晰）。
+- **结论**：融合前按置信度过滤（`depth[conf <= tau] = np.inf`，tau ≈ 0.015，
+  `tsdf.integrate` 自动跳过 inf）——MVSNet 的 P(d) 过滤与 COLMAP 几何一致性
+  做的是同一件事。`tests/test_plane_sweep.py::test_fused_point_cloud_beats_single_view`
+  守护该行为（0.0019 vs 0.018 m²）。
+
 ---
 
 ## 5. 测试怎么写
@@ -260,8 +312,9 @@ for f in tests/test_*.py; do python3 "$f"; done
    （文件头部还需 `sys.path.insert(0, str(Path(__file__).resolve().parents[1]))`
    使从任意 cwd 直跑可用，见 §1.4。）
 
-5. **运行时长预算 < 15 s / 文件**——当前最慢的是 `tests/test_marching.py`
-   （~1.0 s，含两个 40³ 网格提取）；大网格测试通过降分辨率而非删断言来控制时长。
+5. **运行时长预算 < 15 s / 文件**——当前最慢的是 `tests/test_plane_sweep.py`
+   （~9.8 s，含 6 参考视角的端到端融合）；大网格/大扫描通过降分辨率、减深度假设数
+   而非删断言来控制时长。
    指标断言从 `metrics.py` 取实现（[METRICS.md](METRICS.md)），朴素实现只用于
    交叉验证，勿在断言里重写公式。
 6. **写完自查**：`python tests/test_<新文件>.py` 全绿 + 该模块断点处的观察量

@@ -116,6 +116,11 @@ python3 tests/test_metrics.py sample
 奖励"重建点都贴着真值"却漏掉大半个物体（稀疏作弊）；只有 Q→P 方向会奖励"覆盖全"
 却容忍大量离谱外点。教程语境：量化第 04 章融合 (4.8) + 第 05 章提取 (5.1)/(5.2)
 管线的综合质量；学习式重建（第 06/07 章）的论文表格里它是最常见的一列。
+**新模块的同尺对比也走 (M.1)**：`poisson.py` 在球场景上与 TSDF 路线比
+（`tests/test_poisson.py::test_chamfer_against_tsdf_route_on_sphere`，0.0010 vs
+0.0023 m²）、`plane_sweep.py` 的多视角融合 vs 单视角比
+（`tests/test_plane_sweep.py::test_fused_point_cloud_beats_single_view`，0.0019 vs
+0.018 m²）——不同重建路线只有在同一把尺子下才能横向排序。
 
 ### 2.2 如何计算
 
@@ -140,6 +145,9 @@ IJCAI 1977；平方均值口径沿用形状生成评测惯例（Tatarchenko et a
 
 异常信号：**Chamfer > 1e-3** ⇒ 幽灵内壁（未用 `extraction_field()` 权重掩码，
 [DEBUG.md](DEBUG.md) §4 案例 1）；**> 1e-2** ⇒ 位姿/内参错或深度方向约定反。
+（上表数字来自 demo 的深度输入；`poisson.py`/`plane_sweep.py` 两条代理路线在球
+场景上的对比值见 §2.1 末尾与其测试文件——量级同为网格离散化水平 1e-3，
+plane_sweep 未做置信度过滤时恶化到 0.036 m² 的案例见 [DEBUG.md](DEBUG.md) §4 案例 5。）
 
 ### 2.4 如何运行
 

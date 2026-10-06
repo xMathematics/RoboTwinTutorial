@@ -1,6 +1,6 @@
 # 3D 重建 — 主题总览（论文 / 教程 / 代码）
 
-> 论文库：[papers/3d_reconstruction/](../../papers/3d_reconstruction/README.md)（经典 7 + 前沿 5 + 源码包）｜ 教程：[10 章](README.md) ｜ 代码：[projects/3d_reconstruction/](../../projects/3d_reconstruction/README.md)（TSDF + 面提取已建立）
+> 论文库：[papers/3d_reconstruction/](../../papers/3d_reconstruction/README.md)（经典 7 + 前沿 5 + 源码包）｜ 教程：[10 章](README.md) ｜ 代码：[projects/3d_reconstruction/](../../projects/3d_reconstruction/README.md)（7 个模块已建立：MVS 平面扫描 / TSDF / 提取 / Poisson / 3DGS 前向 / 评测）
 
 ## 章节与论文对应
 
@@ -25,10 +25,18 @@
 
 ## 代码状态
 
-`projects/3d_reconstruction/` **已建立**（纯 NumPy，39 项测试双环境全绿）：
-`scene.py`（SDF 基元 + 球追踪深度渲染，对应第 01 章 §1.1 与第 04 章数据来源）、
-`tsdf.py`（Curless & Levoy 1996 加权积分，第 04 章）、`marching.py`（Marching
-Tetrahedra 面提取，第 05 章）、`metrics.py`（Chamfer / 精度完成度 / F-score@τ，DTU
-口径）+ `demo.py` 一键管线（24 视角 → TSDF → 网格 → 评测，F@20mm≈0.96）。
-MVS/COLMAP/NeuS/3DGS 等需多视图匹配或 GPU 优化器的部分不做实现（保真度声明见其
-README）；3DGS 最小可微光栅化器列为延伸方向。
+`projects/3d_reconstruction/` **已建立**（纯 NumPy，55 项测试双环境全绿，逐篇代码
+状态见[精读总索引的「论文 × 代码状态」表](精读/README.md)）：
+
+- **教程主线**：`scene.py`（SDF 基元 + 球追踪深度/RGB 渲染 + 程序化纹理，第 01 章
+  §1.1 与第 04 章数据来源）、`tsdf.py`（Curless & Levoy 1996 加权积分，第 04 章）、
+  `marching.py`（Marching Tetrahedra 面提取，第 05 章）、`metrics.py`（Chamfer /
+  精度完成度 / F-score@τ，DTU 口径）+ `demo.py` 一键管线（24 视角 → TSDF → 网格 →
+  评测，F@20mm≈0.96）；
+- **论文教学代理**：`plane_sweep.py`（第 03 章：COLMAP-MVS 的平面扫描几何内核，
+  单应 warp (3.2) + NCC (3.4) + 置信度）、`poisson.py`（第 05 章压轴：Kazhdan 2006
+  的涂抹→Poisson 方程→提取，FFT 周边界求解的教学简化）、`splatting.py`（第 08 章：
+  3DGS 前向渲染链 (8.4)-(8.10)，只前向不含优化侧）；
+- **不做**（保真度声明见其 README）：COLMAP-SfM 系统工程（几何核心由 slam 覆盖）、
+  MVSNet/NeuS/Neuralangelo/Instant-NGP/ONet/DeepSDF（需 GPU 训练或逐场景优化）、
+  DUSt3R/MASt3R/MapAnything（需基础模型权重）、3DGS 优化侧（需可微光栅化）。

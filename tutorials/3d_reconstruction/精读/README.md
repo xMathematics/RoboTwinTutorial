@@ -50,6 +50,32 @@ MVSNet/NeuS 与本地 LaTeX 源码双重交叉核对；发现的论文排印/口
 
 > MapAnything 的本地资料为 [LaTeX 源码包](../../../papers/3d_reconstruction/latex/arXiv-2509.13414_MapAnything/)（arXiv:2509.13414，已被 3DV 2026 录用）。
 
+## 论文 × 代码状态
+
+图例：**✅ 完整实现**｜**🔶 教学代理**（保留论文几何内核、简化工程外壳，简化项逐条写在
+模块 docstring 与 [projects/3d_reconstruction/README.md](../../../projects/3d_reconstruction/README.md)
+保真度声明）｜**❌ 未实现**。13 篇中无一"完整复现"——项目的定位是教学实现，不追
+论文系统规模；TSDF（Curless & Levoy 1996）等教程主线算法对应
+[projects/3d_reconstruction](../../../projects/3d_reconstruction/) 的 `tsdf.py`/
+`marching.py`/`metrics.py`，不属本表 13 篇。
+
+| 论文 | 状态 | 代码位置与说明 |
+|------|------|----------------|
+| COLMAP-SfM | ❌ | 增量式 SfM 系统工程（特征匹配 + 光束法平差 + 下一最优视图）不做；其几何核心（对极几何、三角化、PnP、BA）由 [projects/slam](../../../projects/slam/) 的 `epipolar`/`photoba` 等模块按 SLAM 教程 05–08 章覆盖 |
+| COLMAP-MVS | 🔶 | [plane_sweep.py](../../../projects/3d_reconstruction/plane_sweep.py)：平面扫描单应 warp (3.2) + NCC (3.4) + 置信度取优；简化掉 patch 级 (深度, 法向) 联合估计、几何一致性视图选择与深度图融合 |
+| MVSNet | ❌ | 3D CNN 代价体正则 + 软 argmin 需 GPU 训练；其平面扫描几何内核由 `plane_sweep.py` 代理，置信度用最优/次优代价差近似 P(d) 峰度 |
+| Poisson 重建 | 🔶 | [poisson.py](../../../projects/3d_reconstruction/poisson.py)：法向涂抹（原文式 (2)）→ 散度/求解 (5.6) → 等值面 (5.8)；简化为均匀网格 + FFT 周边界频域求解（原文为自适应八叉树 + 多重网格），等值面水平取原文 §4.4 的样本均值 |
+| Occupancy Networks | ❌ | 占据隐函数 + Lambert-W 非饱和损失需神经网络训练（GPU 优化器 + 占据真值）；`scene.py` 的解析 SDF 是 (6.1) Eikonal 的精确载体 |
+| DeepSDF | ❌ | 条件 SDF 隐函数 + 自解码器需 GPU 训练与距离变换真值；同上以解析 SDF 承载几何语义 |
+| NeuS | ❌ | SDF→体渲染权重无偏转换的逐场景优化需 GPU（逐光线查询网络）；体渲染基线见 [projects/nerf](../../../projects/nerf/) |
+| Neuralangelo | ❌ | 数值梯度平滑 + 哈希分辨率渐进需 GPU 训练；推导见教程 07 §7.4 与精读 |
+| Instant-NGP | ❌ | 多分辨率哈希编码的训练管线需 GPU；几何/渲染语义由本项目的解析模块承载 |
+| 3D Gaussian Splatting | 🔶 | [splatting.py](../../../projects/3d_reconstruction/splatting.py)：前向渲染链 (8.4)-(8.10)（EWA 投影、深度排序、alpha 合成）；优化侧（可微光栅化反传、致密化/剪枝、球谐）需自动微分，不做 |
+| DUSt3R | ❌ | pointmap 回归需基础模型权重推理；其要替代的手工基线（位姿已知稠密深度）即 `plane_sweep.py` |
+| MASt3R | ❌ | pointmap + 匹配头需基础模型权重推理 |
+| MapAnything | ❌ | 交替注意力前馈 N 视图度量重建需基础模型权重推理 |
+
+
 ## 建议阅读顺序
 
 - **按教程主线**：[十章教程](../README.md) 的 02→03（几何估计）、04→05（融合提取）、06→07→08→09（学习式演进），每章读完即读对应精读；
