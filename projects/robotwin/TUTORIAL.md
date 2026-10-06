@@ -17,14 +17,19 @@
 CoppeliaSim 仿真、MLLM 写专家代码、GPU 训练 VLA 策略（[教程第 07 章](../../tutorials/robotwin/07_环境搭建与实战.md)
 与[第 08 章](../../tutorials/robotwin/08_策略训练与部署.md)、
 [官方仓库](https://github.com/RoboTwin-Platform/RoboTwin)）。本项目里
-**"策略"= 脚本化对照物**：两个手工写死的策略，一个信任出厂标定
-（`calibrated`），一个每回合用带噪观测自标定（`robust`）；真正的策略
-（VLA）训练不在本项目范围，见[教程第 08 章](../../tutorials/robotwin/08_策略训练与部署.md)。
+**"策略"= 脚本化对照物 + 生成式策略的最小教学版**：两个手工写死的策略，
+一个信任出厂标定（`calibrated`），一个每回合用带噪观测自标定（`robust`）；
+[diffusion_lite.py](diffusion_lite.py) 再补上"学出来的策略"长什么样的最小
+标本（2D 轨迹的条件去噪生成）；真正的 VLA 策略训练不在本项目范围，
+见[教程第 08 章](../../tutorials/robotwin/08_策略训练与部署.md)。
 
 **原理概览**：整个项目是一台"评测机器"。`dr.py` 先把世界参数抽歪
 （DR 施加）→ `tasks.py` 提供三种双臂任务的回合环境 → `policies.py`
 的策略在歪世界里执行任务 → `benchmark.py` 按协议跑完全部回合格 →
 `metrics.py` 聚合成论文口径的指标。`arm.py` 是所有环节共用的双臂运动学。
+两个旁支模块各对应一篇策略/抓取论文：`diffusion_lite.py`（Diffusion
+Policy 的 2D 轨迹 DDPM）复用 `tasks/policies` 的回合接口采演示数据；
+`grasp_2d.py`（DexGraspNet 的 2D 力闭合化）是独立的纯几何判据层。
 
 | 组件 | 作用 | 教程章 |
 |------|------|--------|
@@ -34,6 +39,8 @@ CoppeliaSim 仿真、MLLM 写专家代码、GPU 训练 VLA 策略（[教程第 0
 | [policies.py](policies.py) | `calibrated` vs `robust` 脚本策略（对照实验的"被评测者"） | [04 章 §4.2.3](../../tutorials/robotwin/04_核心技术详解.md)、[06 章 §6.4](../../tutorials/robotwin/06_实验结果与解读.md) |
 | [benchmark.py](benchmark.py) | 评测协议：种子规则写死的 (档位×任务×分层×回合) 全网格 | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md) |
 | [metrics.py](metrics.py) | 成功率 / 宏平均+最差任务 / 泛化差距（公式 M.1–M.3） | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md)、[06 章 §6.5–6.6](../../tutorials/robotwin/06_实验结果与解读.md) |
+| [diffusion_lite.py](diffusion_lite.py) | 扩散策略教学代理：DDPM 去噪生成 2D 轨迹（条件 = 起终点） | [08 章 §8.2](../../tutorials/robotwin/08_策略训练与部署.md)、[精读 Diffusion Policy](../../tutorials/robotwin/精读/DiffusionPolicy_RSS2023.md) |
+| [grasp_2d.py](grasp_2d.py) | 2D 力闭合判据 + Ferrari–Canny L1 质量 + 候选排序（平行夹爪） | [09 章 §9.2](../../tutorials/robotwin/09_进阶研究方向.md)、[精读 DexGraspNet](../../tutorials/robotwin/精读/DexGraspNet_NeurIPS2022.md) |
 
 **教学设计的两条主线**：① 全部场景定随机种子——同 seed 逐位复现，既是
 回归测试也是 DEBUG 锚点；② 对照实验只动一个自变量——两个策略共享同一套
@@ -46,7 +53,7 @@ CoppeliaSim 仿真、MLLM 写专家代码、GPU 训练 VLA 策略（[教程第 0
 ## 2. 环境与运行
 
 本项目是**纯 numpy** 代码：conda `llm_env` 与系统 python3（numpy ≥ 1.26）
-均已验证通过（35/35 测试、demo 输出逐位一致），无其他依赖。
+均已验证通过（52/52 测试、demo 输出逐位一致），无其他依赖。
 
 ```bash
 conda activate llm_env            # 或任意 numpy >= 1.26 的环境（系统 python3 亦可）
@@ -57,18 +64,21 @@ python tests/test_arm.py          # 预期：7/7 tests passed.   （~0.2 s）
 python demo.py                    # 预期：打印成功率表（~2.5 s）
 ```
 
-逐文件测试命令清单（每条独立可跑；耗时在系统 python3 / numpy 1.26.4 实测，
-llm_env / numpy 2.2.6 整体略慢约 20%）：
+逐文件测试命令清单（每条独立可跑；耗时实测：系统 python3 / numpy 1.26.4，
+llm_env / numpy 2.2.6 整体更快——其 BLAS 多线程下 DDPM 训练 ~1.2 s，
+系统 python3 ~4.7 s）：
 
 ```bash
 cd projects/robotwin
 
-python tests/test_arm.py          #  7/7 tests passed.    ~0.1 s   （FK/IK/雅可比）
-python tests/test_dr.py           #  6/6 tests passed.    ~0.1 s   （DR 采样器）
-python tests/test_metrics.py      #  6/6 tests passed.    ~0.1 s   （指标纯函数）
-python tests/test_tasks.py        #  7/7 tests passed.    ~0.1 s   （回合环境）
-python tests/test_benchmark.py    #  4/4 tests passed.    ~1.1 s   （协议确定性）
-python tests/test_policies.py     #  5/5 tests passed.    ~2.5 s   （剂量对照实验）
+python tests/test_arm.py            #  7/7 tests passed.    ~0.1 s   （FK/IK/雅可比）
+python tests/test_dr.py             #  6/6 tests passed.    ~0.1 s   （DR 采样器）
+python tests/test_metrics.py        #  6/6 tests passed.    ~0.1 s   （指标纯函数）
+python tests/test_tasks.py          #  7/7 tests passed.    ~0.1 s   （回合环境）
+python tests/test_benchmark.py      #  4/4 tests passed.    ~1.1 s   （协议确定性）
+python tests/test_policies.py       #  5/5 tests passed.    ~2.5 s   （剂量对照实验）
+python tests/test_grasp_2d.py       #  9/9 tests passed.    ~0.2 s   （力闭合判据）
+python tests/test_diffusion_lite.py #  8/8 tests passed.    ~3 s（llm_env）/ ~11 s（系统；含 2 次 DDPM 训练）
 ```
 
 全局一次跑完（在仓库根目录）：
@@ -76,7 +86,7 @@ python tests/test_policies.py     #  5/5 tests passed.    ~2.5 s   （剂量对�
 ```bash
 cd /home/dzxu/RoboTwinTutorial    # 仓库根
 python -m pytest projects/robotwin/tests -v
-# 预期：35 passed（llm_env 实测 ~3.8 s，系统 python3 ~4.4 s）
+# 预期：52 passed（系统 python3 实测 ~14 s，llm_env ~7 s）
 ```
 
 每个测试文件都支持**单点过滤**（传测试名子串，详见 [DEBUG.md](DEBUG.md) §1）：
@@ -89,7 +99,8 @@ python tests/test_arm.py jacobian   # 预期：1/1 tests passed.（只跑名字�
 
 ## 3. 目标输入与输出（最小可运行示例）
 
-以下 5 段片段**每段都实际运行验证过**（输出为确定性复现值）。统一前提：
+以下 7 段片段**每段都实际运行验证过**（输出为确定性复现值；3.7 的采样
+轨迹含随机性，同 seed 逐位复现）。统一前提：
 `cd projects/robotwin` 后在 Python 交互环境或 `python -c` 中执行。各模块的
 输入都是内存中的 numpy 数组（形状/单位随段说明），无文件 I/O。
 
@@ -219,6 +230,56 @@ python demo.py    # 3 任务 × 3 DR 档 × 40 回合 × 2 策略（~2.5 s，确
 calibrated 宏平均 1.00 → 0.85 → 0.34（剂量↑ 单调下降），robust
 0.98 → 0.92 → 0.82（自标定基本持平）。
 
+### 3.7 diffusion_lite —— 扩散策略教学代理（教程 08 章 §8.2）
+
+输入：演示数据自动从 `tasks` 回合接口采集（48 条 push/reach 末端轨迹，
+每条 = (起点, 终点) 条件 + 8 路径点 16 维向量，归一化单位）；输出训练
+损失曲线与米制 2D 轨迹 (8, 2)。训练 ~5 s（3500 轮全批，确定性）。
+
+```python
+import numpy as np
+import diffusion_lite as dl
+conds, trajs = dl.collect_demonstrations()           # 48 条演示（reach 双臂 32 + push 16）
+model, losses = dl.ddpm_train(conds, trajs, seed=0)  # 3500 轮全批，~5 s
+print("训练损失:", round(losses[0], 2), "→", round(losses[-1], 4))
+start, end = np.array([0.497, 0.328]), np.array([0.372, 0.147])
+traj = dl.plan(model, start, end, rng=np.random.default_rng(7))
+print("生成轨迹 (m):", traj.round(3).tolist())
+print("端点偏差 (m):", round(float(np.linalg.norm(traj[0] - start)), 4),
+      round(float(np.linalg.norm(traj[-1] - end)), 4))
+```
+
+实测输出：`训练损失: 3.17 → 0.0222`、生成轨迹首点 ≈ 条件起点、末点 ≈
+条件终点（`端点偏差` ≈ 0.04 / 0.02 m——采样有随机性，同 seed 逐位复现）。
+机制一句话：网络学"给定噪声水平和 (起点, 终点)，这团噪声里藏的是哪条
+路径"，采样 = 从纯噪声出发按 T=50 步反向"擦"出轨迹。
+
+### 3.8 grasp_2d —— 2D 力闭合抓取质量（教程 09 章 §9.2）
+
+输入：凸物体（正方形顶点 / 圆盘）+ 摩擦系数 μ；输出力闭合布尔与
+Ferrari–Canny L1 质量（wrench 凸包内切半径）。全确定性，毫秒级。
+
+```python
+import numpy as np
+import grasp_2d as g
+sq = g.ConvexPolygon(np.array([[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]]))
+p1, n1 = sq.contact(0, 0.5); p2, n2 = sq.contact(2, 0.5)
+anti = g.Grasp2D(np.stack([p1, p2]), np.stack([n1, n2]))   # 上下边中点对径
+p3, n3 = sq.contact(1, 0.5); p4, n4 = sq.contact(2, 0.5)
+adj = g.Grasp2D(np.stack([p3, p4]), np.stack([n3, n4]))    # 右边+上边（偏离对径）
+print("对径: 力闭合 =", g.is_force_closure(anti, 0.4), "L1 =", round(g.grasp_quality(anti, 0.4), 4))
+print("邻边: 力闭合 =", g.is_force_closure(adj, 0.4), "L1 =", g.grasp_quality(adj, 0.4))
+disk = g.Disk(np.zeros(2), 0.3)
+best = g.best_grasp(g.disk_grasp_candidates(disk, 12), mu=0.4)
+ang = lambda p: float(np.degrees(np.arctan2(p[1], p[0])))
+print("圆盘最优抓取角 (deg):", round(ang(best.points[0]), 1), "/", round(ang(best.points[1]), 1),
+      "L1 =", round(g.grasp_quality(best, 0.4), 4))
+```
+
+实测输出：`对径: 力闭合 = True L1 = 0.1674`、`邻边: 力闭合 = False
+L1 = 0.0`、`圆盘最优抓取角 (deg): 0.0 / 180.0 L1 = 0.1072`——对径
+（antipodal）是圆盘上 L1 最大的构型，候选排序自动回到对径。
+
 ---
 
 ## 4. 数据结构
@@ -288,6 +349,32 @@ arm_scale none=(1,1) mild=(0.95,1.05) strong=(0.85,1.15)；radius_scale
 `bm.aggregate(records)` → `dict[regime][task][key]`，key ∈
 `{seen, unseen, all}`（分层成功率与合并成功率）。
 
+### 4.5 diffusion_lite —— 扩散变量 / 条件 / 网络参数
+
+| 项 | 形状 | 含义 | 单位/取值 |
+|----|------|------|-----------|
+| `trajs` | (N, 16) | 干净路径点向量 $x^0$（K=8 点 × 2 维展平，**归一化单位**，`from_workspace` 还原米） | 工作区：`(x−0.45)/0.4, y/0.4` |
+| `conds` | (N, 4) | 条件 = (起点, 终点) 串联（同归一化） | 同上 |
+| `BETAS` / `ALPHAS_BAR` | 各 (50,) | 线性 β 调度 0.005→0.24 / 累积 $\bar\alpha$（$\bar\alpha_T$ ≈ 0.0012，实测） | 无量纲 |
+| `BETA_TILDE` | (50,) | 后验方差 $\tilde\beta_t$（采样步长方差，$\tilde\beta_0=0$） | 无量纲 |
+| `NoiseMLP.params` | dict | W1 (96,36) / W2 (96,96) / W3 (16,96) + 偏置 + 残差捷径 U (16,16)（零初始化） | — |
+| `plan(...)` 返回 | (8, 2) | 米制生成轨迹（首末 ≈ 条件起终点） | m |
+
+训练配置（`ddpm_train` 默认）：3500 轮全批、Adam lr 6e-3 余弦退火到
+2e-4、seed=0；实测损失 3.17 → 0.022、训练 ~5 s（系统 python3）。
+
+### 4.6 grasp_2d —— 物体 / 候选 / 判据量
+
+| 项 | 形状/类型 | 含义 | 单位/取值 |
+|----|-----------|------|-----------|
+| `Disk` | (2,) + 标量 | 圆盘（圆心 + 半径），接触内法向 = 径向反向 | m |
+| `ConvexPolygon` | (n, 2) | 凸多边形（CCW，构造即校验），接触内法向 = 边向左转 90° | m |
+| `Grasp2D.points / .normals` | 各 (2, 2) | 接触点对 / 内法向对；`.axis` = 拟合轴单位向量、`.width` = 张开宽度 | m |
+| `friction_wrenches` | (m, 3) | 单接触摩擦锥 wrench（m=N_RAYS=8 射线；第三维 = 力矩 $p_x f_y − p_y f_x$） | 力无量纲化（幅值 1） |
+| `wrench_hull_analysis` | (bool, float) | 原点内点判定 + L1 = 凸包内切半径（支撑平面枚举） | L1 量纲 = wrench |
+| `grasp_quality` | 标量 | L1 质量（不可行返回 0.0） | ≥ 0 |
+| 候选生成 | list[Grasp2D] | 正方形 54 / 圆盘(12 角) 66 个候选（确定性网格） | — |
+
 ---
 
 ## 5. 计算公式
@@ -306,6 +393,10 @@ arm_scale none=(1,1) mild=(0.95,1.05) strong=(0.85,1.15)；radius_scale
 | 成功率 (M.1)：`SR = (1/N)·Σ sᵢ`，sᵢ∈{0,1} | RoboTwin 2.0 附录 G；[05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md) | `metrics.py::success_rate` |
 | 宏平均+最差 (M.2)：`macro = (1/K)·Σ rₖ`，`worst = minₖ rₖ`（"报均值更报最差"的双层报告） | RoboTwin 2.0 附录 L；教程 §5.6 知识点五步 | `metrics.py::macro_mean_and_worst` |
 | 泛化差距 (M.3)：`Gap = mean(seen) − mean(unseen)`（Table 4 的 {seen, unseen} 配置轴） | RoboTwin 2.0 §4.4；教程 §5.6 ④、§6.5 | `metrics.py::generalization_gap` |
+| DDPM 前向闭式 (D0′)：`xᵗ = √ᾱ·x⁰ + √(1−ᾱ)·ε`；训练损失 = MSE(ε, ε̂)（ε-预测，变分下界化简） | Ho et al. 2020；[精读 Diffusion Policy §4.1](../../tutorials/robotwin/精读/DiffusionPolicy_RSS2023.md)（(D0′) 与论文式 (3)(5) 的记号对应） | `diffusion_lite.py::q_sample` / `::eps_prediction_loss` |
+| DDPM 反向采样：`x^{t−1} = (xᵗ − β/√(1−ᾱ)·ε̂)/√α + √β̃·z`（后验均值 + 后验方差） | Ho et al. 2020 §3.2；精读式 (1)(4) 的标准闭式版 | `diffusion_lite.py::ddpm_sample` |
+| 2D 力闭合：`0 ∈ int Conv(∪ᵢ Wᵢ)`（摩擦锥 wrench 凸包含原点为内点）；两接触特例 = Nguyen 连线在锥内 | Ferrari & Canny 1992；Nguyen 1988；[精读 DexGraspNet §4.3](../../tutorials/robotwin/精读/DexGraspNet_NeurIPS2022.md)（式 (1) 是其可微松弛） | `grasp_2d.py::wrench_hull_analysis` |
+| L1 质量：`Q1 = 原点到 wrench 凸包边界的最小距离`（内切球半径，支撑平面距离取 min） | Ferrari & Canny 1992；精读式 (7)（$Q_1$）；[3D 重建 10 章 (10.5)](../../tutorials/3d_reconstruction/10_机器人场景中的重建实战与选型.md) | `grasp_2d.py::grasp_quality` |
 
 ---
 
@@ -314,7 +405,10 @@ arm_scale none=(1,1) mild=(0.95,1.05) strong=(0.85,1.15)；radius_scale
 依赖方向如实取自 import 关系（箭头 = "复用"）：`arm` 与 `dr` 不依赖库内
 其他模块（仅 numpy）；`tasks → arm, dr`；`policies → arm, dr, tasks`；
 `benchmark → dr, tasks, metrics`（策略由调用方注入）；`metrics` 只依赖
-numpy——被测模块不进指标，指标不进被测模块（纯函数层）。
+numpy——被测模块不进指标，指标不进被测模块（纯函数层）。两个论文旁支
+模块单向挂靠、不进评测闭环：`diffusion_lite → tasks, policies, dr`
+（只用回合接口采演示数据）；`grasp_2d` 只依赖 numpy（纯几何判据；
+与 `tasks.py` 的联动只出现在测试里：最优抓取点满足 pick_place 吸附条件）。
 
 ```mermaid
 flowchart TD
@@ -325,6 +419,8 @@ flowchart TD
     BM["benchmark.py：评测协议<br>种子规则写死的全网格（教程 §5.6）"]
     MET["metrics.py：success_rate /<br>macro+worst / gap（M.1–M.3）"]
     DEMO["demo.py：冒烟入口<br>剂量曲线一张表（~2.5 s）"]
+    DL["diffusion_lite.py：DDPM 2D 轨迹去噪<br>条件 = (起点, 终点)（教程 §8.2）"]
+    G2D["grasp_2d.py：2D 力闭合 + L1 质量<br>候选排序（教程 §9.2）"]
 
     DR --> TASKS
     ARM --> TASKS
@@ -335,6 +431,9 @@ flowchart TD
     TASKS --> BM
     MET --> BM
     BM --> DEMO
+    TASKS --> DL
+    POL --> DL
+    DR --> DL
 ```
 
 一次典型评测回合（`benchmark.run` 内循环）：

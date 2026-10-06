@@ -9,16 +9,18 @@
 
 ## 1. 环境与两种测试
 
-**解释器**：本项目纯 numpy，两套解释器均验证通过（35/35）——
+**解释器**：本项目纯 numpy，两套解释器均验证通过（52/52）——
 
 | 解释器 | numpy | 全套件耗时（实测） | demo.py 耗时 |
 |--------|-------|--------------------|--------------|
-| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | pytest ~3.8 s / 直跑 ~5.4 s | ~2.8 s |
-| 系统 `python3` | 1.26.4 | 直跑 ~4.4 s | ~2.5 s |
+| conda `llm_env`（`~/anaconda3/envs/llm_env/bin/python`） | 2.2.6 | pytest ~7 s（BLAS 多线程，DDPM 训练 ~1.2 s） | ~2.8 s |
+| 系统 `python3` | 1.26.4 | pytest ~14 s（DDPM 训练 ~4.7 s） | ~2.5 s |
 
-两套解释器的 `demo.py` 输出**逐位一致**（有 diff 验证）；唯一版本敏感点是
+两套解释器的 `demo.py` 输出**逐位一致**（有 diff 验证）；三个版本敏感点：
 robust 自标定里的 `np.linalg.lstsq`（SVD 实现，numpy 1.26 与 2.x 有 ~1e-12
-量级差异）——远离一切断言门限，可忽略。
+量级差异）、`diffusion_lite` 的 DDPM 训练（3000+ 次 Adam 更新，理论上是
+末位浮点差放大器）——实测后者在两解释器下的损失曲线**逐位一致**
+（3.170 → 0.0222），采样轨迹同样一致，远离一切断言门限。
 
 ### 1.1 单点测试（改了一个模块 → 用它）
 
@@ -50,7 +52,7 @@ pytest tests/test_arm.py -k jacobian -v                           # -k 子串等
 ```bash
 # 仓库根目录：
 cd /home/dzxu/RoboTwinTutorial
-python -m pytest projects/robotwin/tests -v      # 预期：35 passed
+python -m pytest projects/robotwin/tests -v      # 预期：52 passed
 # 或在 projects/robotwin 下逐文件直跑（不依赖 pytest）：
 cd projects/robotwin
 for f in tests/test_*.py; do python3 "$f"; done
@@ -109,6 +111,9 @@ for f in tests/test_*.py; do python3 "$f"; done
 | `tasks.py::PickPlaceTask._task_dynamics`（吸附分支） | `holding` 翻转、吸附偏移 `offset`（T-6） |
 | `policies.py::ScriptedPolicy._act_push`（stall 检测块） | `_best_dist`/`_since_improve` 与退回 back 的触发（P-3/P-4） |
 | `policies.py::RobustPolicy._measure`（`lstsq` 一行） | 测量矩阵条件、`sol` 与真值连杆长的差（P-5/P-6） |
+| `diffusion_lite.py::ddpm_train`（`eps_prediction_loss` 一行） | 单步损失、`x_t` 的信噪比随 t 的变化（DL-2） |
+| `diffusion_lite.py::ddpm_sample`（`coef = BETAS[k]/...` 一行） | 反向链当前步 k、注噪幅度 `sqrt(BETA_TILDE[k])`（DL-1） |
+| `grasp_2d.py::wrench_hull_analysis`（`d_support = ...` 一行） | 支撑平面距离数组、min 即 L1（G-1） |
 | `benchmark.py::run`（`seed = episode_seed(...)` 一行） | 种子派生四层索引（B-1） |
 
 ---
@@ -117,7 +122,7 @@ for f in tests/test_*.py; do python3 "$f"; done
 
 约定：**形状**为断点处的 numpy 形状；**健康值**为基准场景（测试定种子）
 实测；**异常信号**出现即有 bug 或配置错误。分组编号 A(rm)/T(asks)/
-D(R 采样)/P(olicies)/B(enchmark)/M(etrics)。
+D(R 采样)/P(olicies)/B(enchmark)/M(etrics)/DL(iffusion Lite)/G(rasp 2D)。
 
 ### A：arm（断点 `arm.py`）
 
@@ -158,6 +163,23 @@ D(R 采样)/P(olicies)/B(enchmark)/M(etrics)。
 | P-5 | `RobustPolicy._measure` | `sol` | 测量连杆长 (4,)，m | worst 误差 **0.0136 m**（8 回合 strong 实测；`test_policies.py` 打印） | > 0.06 → 探测读数坏（观测噪声超档位区间或 PROBE_Q 被改） |
 | P-6 | 同上 | `measured_radius` | 测量半径（标量，m） | 与真值差 < 0.02（实测 ~0.005） | 系统性等于名义值 0.05 → `radius` 读数没进均值 |
 | P-7 | 两策略对照（`test_policies.py` 打印） | 各档宏平均 | 标量 | calibrated **1.00→0.85→0.34**；robust **0.98→0.92→0.82**（N=40, seed0=0） | robust 的 strong 也塌到 < 0.5 → 观测噪声/测量流程坏；calibrated 的 none < 0.95 → 标定世界被污染（dr 的 none 档坏了） |
+
+### DL：diffusion_lite（断点 `diffusion_lite.py`）
+
+| # | 断点 / 来源 | 变量 | 含义 | 健康值 | 异常信号 |
+|---|-------------|------|------|--------|----------|
+| DL-1 | `ddpm_sample` | `BETAS[k]` / `ALPHAS_BAR[k]` / `BETA_TILDE[k]` | 当前步噪声系数（标量） | β 线性 0.005→0.24；ᾱ 从 0.995 单调降到 **0.00124**（实测）；BETA_TILDE[0]=0 | ᾱ_T > 0.01 → 先验偏离 N(0,I)，采样起点错；β 越界 (0,1) → 调度坏 |
+| DL-2 | `ddpm_train` | `loss`（逐轮均值） | MSE ε-预测损失 | seed=0：3.17 → **0.022**（三段均值 0.106 → 0.038 → 0.029，单调下降，两解释器逐位一致） | 损失不降 → lr/时间嵌入/手写反传坏（跑 `tests/test_diffusion_lite.py finite` 查梯度） |
+| DL-3 | `ddpm_sample` 返回 + `plan` | 端点偏差 / 平滑度比 | 生成轨迹首末点与条件的距离（m）/ 二阶差分范数 ÷ 纯噪声基线 | 端点 max ≈ **0.044**（48 条实测，门限 0.08）；平滑比 max ≈ **0.12**（门限 0.5） | 端点 > 0.08 m → 训练不充分（epochs 被调小）或条件接错列；平滑比 ≥ 0.5 → 采样方差用了 √β 而非 √β̃（或模型未训练） |
+| DL-4 | `collect_demonstrations` | `conds/trajs` 形状 | (N,4) / (N,16)，N = 2·n_reach + n_push | 默认 **48** 条（32 reach + 16 push）；路径点无重复（弧长重采样） | 形状不符 → seed/回合数被改；出现重复路径点 → `_resample_curve` 被换回取整索引 |
+
+### G：grasp_2d（断点 `grasp_2d.py`）
+
+| # | 断点 / 来源 | 变量 | 含义 | 健康值 | 异常信号 |
+|---|-------------|------|------|--------|----------|
+| G-1 | `wrench_hull_analysis` | `d_support` | 各支撑平面的"原点在内侧"距离 (T,)，min 即 L1 | 正方形对径 μ=0.4：L1 = **0.167**（实测）；FC 成立 ⟺ 全部 > 0 | FC 判 True 但 min ≤ 0 → 容差/朝向逻辑坏；对径抓取判 False → 摩擦锥射线数被改 |
+| G-2 | `grasp_quality`（边界用例） | 返回值 | L1 质量（不可行 = 0） | 偏移对径 c=0.25@μ0.4 = **0.060**；c=0.45@μ0.4 = **0**；c=0.45@μ0.5 = **0.018**；圆盘最优（对径）= **0.107**（均实测） | c ≤ 2aμ 却判不可行 → 锥射线数/法向朝向坏；μ=0 判 True → 内点容差被放大 |
+| G-3 | `l1_by_support_sampling` | 返回值 | L1 的独立口径（支撑函数方向采样，Fibonacci 4000 向） | 与 G-1 的 L1 差 ≤ **0.005**（实测，理论界 = 网格间距 × 最大 wrench 范数） | FC 抓取上差 > 0.05 → 采样实现坏；非 FC 抓取返回正值偏大 → 只能说明原点在凸包附近（该口径带符号，与协议 0 值不同，见 tests 注释） |
 
 ### B：benchmark / M：metrics
 
@@ -233,8 +255,9 @@ D(R 采样)/P(olicies)/B(enchmark)/M(etrics)。
 4. **文件尾部带单点过滤主入口**——照抄 slam 的 `__main__` 块（匹配 `test_`
    前缀 + 子串过滤；无匹配列出全部测试名并 exit 1；逐个运行打印
    PASS/FAIL 与回溯；末行 `N/M tests passed.`）。
-5. **运行时长预算 < 15 s / 文件**——当前最慢的是 `tests/test_policies.py`
-   （~3.0 s，含 3 次 N=40 的全网格评测）；Monte-Carlo 类测试通过减少回合数
+5. **运行时长预算 < 15 s / 文件**——当前最慢的是 `tests/test_diffusion_lite.py`
+   （~11 s 直跑，含 2 次 DDPM 训练：一次供采样类测试共享、一次独立计时；
+   训练限时 < 8 s 有专门断言）；Monte-Carlo 类测试通过减少回合数
    而非删断言来控制时长。指标断言从 `metrics.py` 取实现，勿在测试里重写公式。
 6. **写完自查**：`python tests/test_<新文件>.py` 全绿 + 该模块断点处的观察量
    （§3 变量表）落在健康值内 + 若新增了被监视变量，同步更新本文件的变量表

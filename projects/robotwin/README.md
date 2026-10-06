@@ -14,7 +14,8 @@ arXiv:2506.18088）是一个需要 **CoppeliaSim 仿真器 + MLLM 数据生成 +
 | **域随机化** | 五维 DR 采样器：对象尺寸/摩擦/臂长/观测噪声/动作缩放，`none/mild/strong` 三档剂量，与论文五维的结构对照表见 [dr.py](dr.py) 模块注释 | 视觉五维（杂乱/纹理/光照/桌高/语言）——需要渲染与语言管线（论文 §2.2） |
 | **基准评测协议** | 每任务 N 回合 rollout、宏平均 + **最差任务**成功率、**seen/unseen 泛化差距**，全确定种子（[benchmark.py](benchmark.py) + [metrics.py](metrics.py)） | 50 任务 × 5 本体 × 100 rollout 的全矩阵（论文 §4.5、附录 L） |
 | **本体运动学** | 平面 2 连杆臂解析 FK / 双解 IK（选肘向）/ 解析-数值雅可比互证（[arm.py](arm.py)） | 7-DoF 臂、CuRobo 运动规划、体态感知抓取适配（论文 §2.3） |
-| **策略对照** | 两种脚本策略：`calibrated`（信任名义 CAD 模型）vs `robust`（每回合带噪观测自标定）——**无学习**，重点是协议与 DR 演示 | MLLM 专家代码生成、ACT/DP/RDT/π0 等 VLA 策略训练——见[教程第 08 章](../../tutorials/robotwin/08_策略训练与部署.md) |
+| **策略对照** | 脚本对照策略：`calibrated`（信任名义 CAD 模型）vs `robust`（每回合带噪观测自标定），**无学习**，重点是协议与 DR 演示 + [diffusion_lite.py](diffusion_lite.py)（生成式策略的最小教学版：2D 轨迹 DDPM，条件去噪生成） | MLLM 专家代码生成；ACT/RT-1/RT-2/OXE/OpenVLA/π0/RDT 等 VLA 基础模型与大规模 transformer 策略训练——视觉编码器 + 亿级数据 + GPU 工程，超出纯 NumPy 教学范围（各策略口径见[教程第 08 章](../../tutorials/robotwin/08_策略训练与部署.md)与[精读](../../tutorials/robotwin/精读/README.md)） |
+| **抓取质量** | [grasp_2d.py](grasp_2d.py)（[DexGraspNet](../../tutorials/robotwin/精读/DexGraspNet_NeurIPS2022.md) 的 2D 化：平行夹爪力闭合判据 + Ferrari–Canny L1 质量 + 候选排序） | ShadowHand 28 维位姿的可微能量合成（1.32M 抓取）与 Isaac Gym 物理校验（论文式 (3)(6) 与 §III-C）——需要可微仿真栈 |
 
 仿真器安装、数据采集与官方基准的完整实操：**[教程第 07 章](../../tutorials/robotwin/07_环境搭建与实战.md)**
 与 [官方仓库](https://github.com/RoboTwin-Platform/RoboTwin)。
@@ -37,29 +38,36 @@ python -c "import arm, tasks, dr, policies, benchmark, metrics; print('robotwin 
 ```
 
 ```bash
-# 全套测试（35 个，确定性，< 6 s）
-python -m pytest tests/ -v          # 预期：35 passed
+# 全套测试（52 个，确定性；系统 python3 ~14 s / llm_env ~7 s）
+python -m pytest tests/ -v          # 预期：52 passed
 # 核心入口冒烟演示（3 任务 × 3 DR 档 × 40 回合 × 2 策略，确定性输出，~2.5 s）
 python demo.py
 ```
 
 - **单点测试**：`python tests/test_arm.py jacobian`（子串过滤；无匹配会列出可用测试名）
 - 两个解释器均已验证：conda `llm_env`（numpy 2.2.6）与系统 python3（numpy 1.26.4），
-  35/35 全绿、`demo.py` 输出逐位一致
+  52/52 全绿、`demo.py` 输出逐位一致
 - VS Code 调试配置见 [.vscode/launch.json](../../.vscode/launch.json)，用法见
   [.vscode/SETUP.md](../../.vscode/SETUP.md)
 
 ## 模块总览（论文 × 模块 × 教程章 × 测试数）
 
-| 模块 | 论文对应（arXiv:2506.18088） | 教程章 | 核心内容 | 测试 |
-|------|------------------------------|--------|----------|------|
-| [arm.py](arm.py) | §2.3 体态适配的 IK 可达性初筛 | [02 章 §2.1](../../tutorials/robotwin/02_双臂操作与仿真基础.md) | 平面 2 连杆解析 FK、双解 IK（选肘向 + 限位）、解析/数值雅可比互证、`BimanualArm2D` 双臂状态 (4,) | 7 |
-| [dr.py](dr.py) | §2.2 五维域随机化（附录 C 剂量口径） | [04 章 §4.2](../../tutorials/robotwin/04_核心技术详解.md) | `WorldParams` 世界参数 + `none/mild/strong` 三档剂量采样（strong ⊇ mild 区间守恒）+ 物理界校验/截断 | 6 |
-| [tasks.py](tasks.py) | §3.2 / §4.5 任务基元（50 任务的三类代表） | [02 章 §2.2](../../tutorials/robotwin/02_双臂操作与仿真基础.md)、[05 章 §5.5](../../tutorials/robotwin/05_数据集与基准.md) | `reach / push / pick_place` 三种回合环境：统一 `reset(seed, split) → obs`、`step(action) → obs, reward, done, info`；法向接触-摩擦推、夹爪状态机 | 7 |
-| [policies.py](policies.py) | §4.3 Table 3 的 clean vs DR 对照（脚本策略版） | [04 章 §4.2.3](../../tutorials/robotwin/04_核心技术详解.md)、[06 章 §6.4](../../tutorials/robotwin/06_实验结果与解读.md) | `calibrated`（名义 CAD 模型）vs `robust`（4 步探测 + 线性最小二乘自标定连杆长/半径） | 5 |
-| [benchmark.py](benchmark.py) | §4.5 基准评测协议（每任务 100 rollout） | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md) | (regime × task × split × episode) 全网格驱动，素数混散种子规则写死，逐位可复现 | 4 |
-| [metrics.py](metrics.py) | 附录 G（成功率）/ 附录 L（双层报告） | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md)、[06 章 §6.5–6.6](../../tutorials/robotwin/06_实验结果与解读.md) | `success_rate` / `macro_mean_and_worst`（宏平均+最差任务）/ `generalization_gap`（seen−unseen），纯函数 (M.1)–(M.3) | 6 |
+| 模块 | 论文对应 | 教程章 | 核心内容 | 测试 |
+|------|----------|--------|----------|------|
+| [arm.py](arm.py) | RoboTwin 2.0（arXiv:2506.18088）§2.3 体态适配的 IK 可达性初筛 | [02 章 §2.1](../../tutorials/robotwin/02_双臂操作与仿真基础.md) | 平面 2 连杆解析 FK、双解 IK（选肘向 + 限位）、解析/数值雅可比互证、`BimanualArm2D` 双臂状态 (4,) | 7 |
+| [dr.py](dr.py) | RoboTwin 2.0 §2.2 五维域随机化（附录 C 剂量口径） | [04 章 §4.2](../../tutorials/robotwin/04_核心技术详解.md) | `WorldParams` 世界参数 + `none/mild/strong` 三档剂量采样（strong ⊇ mild 区间守恒）+ 物理界校验/截断 | 6 |
+| [tasks.py](tasks.py) | RoboTwin 2.0 §3.2 / §4.5 任务基元（50 任务的三类代表） | [02 章 §2.2](../../tutorials/robotwin/02_双臂操作与仿真基础.md)、[05 章 §5.5](../../tutorials/robotwin/05_数据集与基准.md) | `reach / push / pick_place` 三种回合环境：统一 `reset(seed, split) → obs`、`step(action) → obs, reward, done, info`；法向接触-摩擦推、夹爪状态机 | 7 |
+| [policies.py](policies.py) | RoboTwin 2.0 §4.3 Table 3 的 clean vs DR 对照（脚本策略版） | [04 章 §4.2.3](../../tutorials/robotwin/04_核心技术详解.md)、[06 章 §6.4](../../tutorials/robotwin/06_实验结果与解读.md) | `calibrated`（名义 CAD 模型）vs `robust`（4 步探测 + 线性最小二乘自标定连杆长/半径） | 5 |
+| [benchmark.py](benchmark.py) | RoboTwin 2.0 §4.5 基准评测协议（每任务 100 rollout） | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md) | (regime × task × split × episode) 全网格驱动，素数混散种子规则写死，逐位可复现 | 4 |
+| [metrics.py](metrics.py) | RoboTwin 2.0 附录 G（成功率）/ 附录 L（双层报告） | [05 章 §5.6](../../tutorials/robotwin/05_数据集与基准.md)、[06 章 §6.5–6.6](../../tutorials/robotwin/06_实验结果与解读.md) | `success_rate` / `macro_mean_and_worst`（宏平均+最差任务）/ `generalization_gap`（seen−unseen），纯函数 (M.1)–(M.3) | 6 |
+| [diffusion_lite.py](diffusion_lite.py) | Diffusion Policy（Chi et al., RSS 2023, arXiv:2303.04137）§2 的教学代理 | [08 章 §8.2](../../tutorials/robotwin/08_策略训练与部署.md)、[精读](../../tutorials/robotwin/精读/DiffusionPolicy_RSS2023.md) | 2D 轨迹去噪生成：DDPM 线性 β 调度 T=50 + 3 层 MLP 噪声网络（手写前向/反向 + 有限差分互证）+ MSE ε-预测损失 + 反向链采样；数据 = push/reach 回合接口采集的 (起点, 终点) 条件 8 路径点（16 维） | 8 |
+| [grasp_2d.py](grasp_2d.py) | DexGraspNet（Wang et al., NeurIPS 2022, arXiv:2210.02697）判据的教学代理 | [09 章 §9.2](../../tutorials/robotwin/09_进阶研究方向.md)、[精读](../../tutorials/robotwin/精读/DexGraspNet_NeurIPS2022.md) | 2D 平行夹爪力闭合（摩擦锥 wrench 凸包含原点的 Ferrari–Canny 判据）+ L1 质量（凸包内切半径）+ 网格候选排序；支撑函数采样独立口径互证；与 `tasks.py` pick_place 吸附条件联动 | 9 |
 | [demo.py](demo.py) | —（方法论冒烟） | [04 章 §4.2.3](../../tutorials/robotwin/04_核心技术详解.md)、[06 章 §6.4](../../tutorials/robotwin/06_实验结果与解读.md) | 3 任务 × 3 DR 档 × 40 回合 × 2 策略 → 成功率表 + 一句话结论（~2.5 s，确定性） | — |
+
+注：`grasp_2d.py` 的 L1 质量是**抓取假设的模块内评估量**（DexGraspNet 口径，
+只用于候选排序），不进 `metrics.py`——`metrics.py` 是评测协议（成功率类
+指标）的唯一定义处，两者是"物体上选哪个抓取"与"策略任务做没做成"两个
+不同层级的量，故 METRICS.md 不新增章节。
 
 ## 运行示例（1 分钟复现"DR 剂量 vs 成功率"）
 
@@ -88,7 +96,7 @@ for name, cls in (("calibrated", CalibratedPolicy), ("robust", RobustPolicy)):
 projects/robotwin/
 ├── README.md            # 本文件（保真度声明 + 快速开始）
 ├── TUTORIAL.md          # 零基础代码导读（必读入口）
-├── DEBUG.md             # 调试与测试教程（25 条重点观察变量表）
+├── DEBUG.md             # 调试与测试教程（重点观察变量表）
 ├── METRICS.md           # 测评指标教程（成功率/宏平均+最差/泛化差距）
 ├── arm.py               # 平面 2 连杆双臂运动学（FK/IK/雅可比）
 ├── tasks.py             # 三种双臂任务回合环境
@@ -96,8 +104,10 @@ projects/robotwin/
 ├── policies.py          # 两种脚本对照策略（calibrated / robust）
 ├── benchmark.py         # 评测协议（种子规则写死，确定性）
 ├── metrics.py           # 统一测评模块（公式 M.1–M.3 唯一定义处）
+├── diffusion_lite.py    # 扩散策略教学代理（2D 轨迹 DDPM，RSS 2023）
+├── grasp_2d.py          # 2D 力闭合抓取质量与排序（DexGraspNet 教学代理）
 ├── demo.py              # 核心入口冒烟演示
-└── tests/test_*.py      # 6 个测试文件 35 个用例，全部支持单点过滤
+└── tests/test_*.py      # 8 个测试文件 52 个用例，全部支持单点过滤
 ```
 
 ## 规范

@@ -41,6 +41,29 @@
 |------|--------------|-----------|--------|
 | [DexGraspNet](DexGraspNet_NeurIPS2022.md) | DexGraspNet（NeurIPS 2022） | 可微力闭合优化合成 1.3M 灵巧手抓取 | [09](../09_进阶研究方向.md)、[3D 重建 10](../../3d_reconstruction/10_机器人场景中的重建实战与选型.md) |
 
+## 论文 × 代码状态（projects/robotwin）
+
+本目录 11 篇论文与本地教学实现 [projects/robotwin/](../../../projects/robotwin/README.md)
+（纯 NumPy 迷你基准，52 项测试双环境全绿）的对应关系：
+
+| 论文 | 代码状态 | 对应实现 | 一句话说明 |
+|------|----------|----------|-----------|
+| [RoboTwin 2.0](RoboTwin2.0_arXiv2025.md) | ✅ | `benchmark / dr / metrics / tasks` 等 | 两条方法论主线——域随机化（none/mild/strong 三档剂量 × 五维）与评测协议（成功率 / 宏平均+最差 / seen−unseen 差距）——的 2D 迷你复现 |
+| [RoboTwin 1.0](RoboTwin1.0_ECCVW2024.md) | 🔶 | 同上（基准协议侧） | 双臂基准的"回合环境 + 成功率"骨架已复现；生成式数字孪生（真实-仿真对齐）需要渲染管线，不在范围 |
+| [Diffusion Policy](DiffusionPolicy_RSS2023.md) | 🔶 | [diffusion_lite.py](../../../projects/robotwin/diffusion_lite.py) | DDPM 条件去噪生成的最小教学版；简化：2D 轨迹（无图像观测）、3 层 MLP 手写反传（无 Transformer/CNN 骨干）、条件退化为 (起点, 终点)（无 CVAE、无 DDIM 加速） |
+| [DexGraspNet](DexGraspNet_NeurIPS2022.md) | 🔶 | [grasp_2d.py](../../../projects/robotwin/grasp_2d.py) | 力闭合判据 + Ferrari–Canny L1 + 候选排序落到 2D 平行夹爪；简化：接触点对抓取（无 28 维灵巧手位姿）、网格候选（无可微能量优化）、解析判据（无 Isaac Gym 校验） |
+| [ACT / ALOHA](ACT_ALOHA_RSS2023.md) | ❌ | — | CVAE + Transformer 动作分块的双臂模仿训练，属 GPU 模仿学习工程（教程 08 章）；"生成式策略"思想由 diffusion_lite 代讲 |
+| [RT-1](RT1_arXiv2022.md) | ❌ | — | 130k+ 回合的大规模机器人 Transformer，瓶颈在数据与算力而非公式 |
+| [RT-2](RT2_arXiv2023.md) | ❌ | — | VLM → 动作 token 的 VLA 基础模型，依赖网络级预训练权重 |
+| [Open X-Embodiment](OpenXEmbodiment_ICRA2024.md) | ❌ | — | 22 本体 1M+ 轨迹的数据基座，没有可仿真化的"最小版本" |
+| [OpenVLA](OpenVLA_CoRL2024.md) | ❌ | — | 7B 开源 VLA（LoRA 微调），预训练-微调范式超出纯 NumPy 教学范围 |
+| [π0](Pi0_arXiv2024.md) | ❌ | — | 流匹配 VLA（VLM 骨干 + 动作专家），同上 |
+| [RDT-1B](RDT1B_ICLR2025.md) | ❌ | — | 1B 扩散 Transformer 双臂基础模型，预训练规模不可教学化 |
+
+原则：能落成"1 分钟内跑通的方法论骨架"的判据 / 协议 / 生成式思想
+（✅/🔶）均有对应 NumPy 教学实现；依赖大规模数据、预训练权重或 GPU
+工程的（❌）只留教程与精读。各模块"与原文的差异"逐条见其模块 docstring。
+
 ## 建议阅读顺序
 
 - **按教程主线**：[十章教程](../README.md) 08 章策略训练 ↔ Diffusion Policy/ACT/RT-1 精读；

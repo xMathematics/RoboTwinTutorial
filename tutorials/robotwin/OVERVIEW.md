@@ -37,10 +37,17 @@
 
 ## 代码状态
 
-`projects/robotwin/` 已建立为**方法论迷你基准**（纯 NumPy，35 项测试双环境全绿）：
+`projects/robotwin/` 已建立为**方法论迷你基准**（纯 NumPy，52 项测试双环境全绿）：
 把 RoboTwin 2.0 论文的两条方法论主线——**域随机化**（none/mild/strong 三档剂量 ×
 五维采样，对照其五维 DR）与**基准评测协议**（每任务成功率、宏平均 + 最差任务、
 seen/unseen 泛化差距）——做成 2D 双臂玩具世界（FK/IK + reach/push/pick_place 三任务
 + 标定型 vs 自标定型脚本策略对照），`demo.py` 约 2 秒复现教程 §4.2.3/§6.4 的
-"DR 剂量 vs 成功率"曲线。RoboTwin 本体（CoppeliaSim 仿真、MLLM 数据生成、VLA 策略
-训练）不在教学实现范围内，实操以官方开源与教程第 7、8 章为准。
+"DR 剂量 vs 成功率"曲线。两篇论文另配教学代理模块：**Diffusion Policy** →
+[diffusion_lite.py](../../projects/robotwin/diffusion_lite.py)（2D 轨迹的 DDPM
+条件去噪生成：手写 MLP 反传 + ε-预测损失 + 反向链采样，条件 = 起终点，~5 s 可训练）；
+**DexGraspNet** → [grasp_2d.py](../../projects/robotwin/grasp_2d.py)（力闭合判据 +
+Ferrari–Canny L1 质量的 2D 平行夹爪化：wrench 凸包支撑平面枚举 + 网格候选排序）。
+11 篇论文逐篇的代码对应状态见 [精读/README.md](精读/README.md) 的
+「论文 × 代码状态」表。RoboTwin 本体（CoppeliaSim 仿真、MLLM 数据生成、VLA 策略
+训练——ACT/RT-1/RT-2/OXE/OpenVLA/π0/RDT 等基础模型）不在教学实现范围内，
+实操以官方开源与教程第 7、8 章为准。
