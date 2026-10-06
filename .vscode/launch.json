@@ -168,13 +168,115 @@
       "cwd": "${workspaceFolder}/projects/slam",
       "console": "integratedTerminal",
       "justMyCode": true
+    },
+    {
+      "name": "3D 重建: 核心入口（demo.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/3d_reconstruction/demo.py",
+      "cwd": "${workspaceFolder}/projects/3d_reconstruction",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "3D 重建: 全局测试（pytest 全套件）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "projects/3d_reconstruction/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "3D 重建: 单点测试（当前文件 + 测试名过滤）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "args": [
+        "${input:testFilter}"
+      ],
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "control_planning: 核心入口（demo.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/control_planning/demo.py",
+      "cwd": "${workspaceFolder}/projects/control_planning",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "control_planning: 全局测试（pytest 全套件）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "projects/control_planning/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "control_planning: 单点测试（当前文件 + 测试名过滤）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "args": [
+        "${input:testFilter}"
+      ],
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "RoboTwin: 核心入口（demo.py）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/projects/robotwin/demo.py",
+      "cwd": "${workspaceFolder}/projects/robotwin",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "RoboTwin: 全局测试（pytest 全套件）",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "projects/robotwin/tests",
+        "-v"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "justMyCode": true
+    },
+    {
+      "name": "RoboTwin: 单点测试（当前文件 + 测试名过滤）",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "args": [
+        "${input:testFilter}"
+      ],
+      "cwd": "${fileDirname}",
+      "console": "integratedTerminal",
+      "justMyCode": true
     }
   ],
   "inputs": [
     {
       "id": "testFilter",
       "type": "promptString",
-      "description": "测试名子串（如 hartley、gat；留空 = 全部测试；无匹配会列出可用测试名）",
+      "description": "测试名子串（如 gat、normals、riccati、dose；留空 = 全部测试；无匹配会列出可用测试名）",
       "default": ""
     }
   ]

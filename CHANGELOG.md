@@ -7,6 +7,32 @@
 
 ## [Unreleased]
 
+### 新增（三大主题项目实现，2026-10-07）
+
+- **projects/3d_reconstruction/**：3D 重建教学实现（纯 NumPy）——scene.py（SDF 基元 +
+  球追踪深度渲染）、tsdf.py（Curless & Levoy 1996 加权积分）、marching.py（Marching
+  Tetrahedra 面提取，16 case 表含穷举自检）、metrics.py（Chamfer / 精度完成度 DTU 口径 /
+  F-score@τ / 网格面积加权采样）+ demo.py 一键管线（24 视角 → TSDF → 网格 → 评测，
+  F@20mm≈0.96）；39 项测试双环境全绿
+- **projects/control_planning/**：控制与规划教学实现（纯 NumPy）——rrt.py（RRT/RRT* 重布线）、
+  ilqr.py（含与 Riccati 代数解交叉验证）、mpc_cem.py（CEM-MPC，PETS 简化档）、cbf.py
+  （QP 安全滤波，闭式投影 + POCS 多约束）、osc_arm.py（2R 臂 FK/雅可比/DLS-IK/阻抗控制）、
+  ppo_lite.py（微型 PPO：手写前向反向 + GAE + clip）+ metrics.py（规划成功率/路径长度/
+  轨迹代价，§4.7 点名基线补齐）+ demo.py 四段冒烟；46 项测试双环境全绿
+- **projects/robotwin/**：RoboTwin 方法论迷你基准（纯 NumPy）——把论文两条主线做成 2D
+  双臂玩具世界：dr.py（none/mild/strong 三档 × 五维域随机化采样）、benchmark.py（评测协议：
+  每任务成功率 / 宏平均 + 最差任务 / seen-unseen 泛化差距，种子规则写死全网格逐位确定）、
+  arm.py/tasks.py（FK/IK + reach/push/pick_place 回合环境）、policies.py（标定型 vs
+  自标定型对照，复现"DR 剂量 vs 成功率"曲线）+ metrics.py；35 项测试双环境全绿，
+  demo.py 约 2 秒复现教程 §4.2.3/§6.4 论断
+- **三项目四件套文档**（README/TUTORIAL/DEBUG/METRICS）按 §4.4–§4.7 交付，测试全部支持
+  `python tests/test_X.py <子串>` 单点过滤；DEBUG.md 变量表（24/27/25 条）健康值均为实测
+- **VS Code 注册扩容**（§4.8 五处同步）：settings.pytestArgs/extraPaths/PYTHONPATH 覆盖
+  五项目；launch.json 21 条（每新项目核心入口/全局测试/单点测试三条）；tasks.json 18 条；
+  SETUP.md 同步
+- **索引联动**：projects/README、根 README 目录树、三个主题 OVERVIEW 代码状态、
+  CONSTRAINTS §4.7 指标基线（3d_reconstruction / control_planning / robotwin 补齐）
+
 ### 修复（全库查缺补漏）
 
 - 根 README / CHANGELOG 计数与状态勘误：精读总数 38→**52**（18+13+11+9+1）、

@@ -1,6 +1,6 @@
 # 机器人控制与规划 — 主题总览（论文 / 教程 / 代码）
 
-> 论文库：[papers/control_planning/](../../papers/control_planning/README.md)（经典 3 + 前沿 6）｜ 教程：[10 章](README.md)（架构已定）｜ 代码：规划中
+> 论文库：[papers/control_planning/](../../papers/control_planning/README.md)（经典 3 + 前沿 6）｜ 教程：[10 章](README.md) ｜ 代码：[projects/control_planning/](../../projects/control_planning/README.md)（RRT*/iLQR/MPC/CBF/阻抗/PPO 已建立）
 
 ## 章节与论文对应
 
@@ -26,6 +26,10 @@
 
 ## 代码状态
 
-`projects/control_planning/` 尚未建立。规划：2D RRT/RRT*（纯 NumPy）、二连杆
-iLQR + 阻抗控制仿真（MuJoCo 可选）、QP-CBF 安全滤波示例——与 projects/slam 的
-教学实现同一风格（类型提示 + 论文式号 docstring + 可运行测试）。
+`projects/control_planning/` **已建立**（纯 NumPy，46 项测试双环境全绿），
+被控对象统一为 2D 双积分器与平面 2R 臂：`rrt.py`（RRT/RRT*，第 03 章）、
+`ilqr.py`（iLQR，含与 Riccati 代数解的交叉验证，第 04 章）、`mpc_cem.py`（CEM-MPC，
+PETS 的"已知动力学 + CEM"简化档，第 05 章）、`cbf.py`（QP 安全滤波，第 07 章）、
+`osc_arm.py`（FK/雅可比/DLS-IK/阻抗控制，第 06 章）、`ppo_lite.py`（微型 PPO，
+第 08 章）+ `metrics.py`（规划成功率/路径长度/轨迹代价）+ `demo.py` 四段冒烟。
+MuJoCo 仿真与学习式腿控不实现（保真度声明见其 README）。

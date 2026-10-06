@@ -22,8 +22,8 @@
 | 文件 | 管什么 | 关键内容 |
 |------|--------|---------|
 | `settings.json` | **Anaconda 环境写入 VS Code**：默认解释器指向 conda `llm_env`、终端自动激活、pytest 测试发现范围、代码智能分析的搜索路径、保存时自动格式化 | `python.defaultInterpreterPath` = `/home/dzxu/anaconda3/envs/llm_env/bin/python` |
-| `launch.json` | **调试**：12 条调试配置——NeRF 6 条（tiny 冒烟训练/全局测试/单点测试/全量训练/测试/渲染）、通用"当前文件"1 条、SLAM 5 条（核心入口 demo.py/全局测试/单点测试/两个代表性单点示例） | 见 §4 |
-| `tasks.json` | **任务**：9 条一键任务（NeRF 全局/单点测试、冒烟训练、SLAM 核心入口、SLAM 全局/单点测试等），`Terminal → Run Task` 调用 | 测试任务分组为 `test` |
+| `launch.json` | **调试**：21 条调试配置——NeRF 6 条（tiny 冒烟训练/全局测试/单点测试/全量训练/测试/渲染）、SLAM 5 条（核心入口 demo.py/全局测试/单点测试/两个代表性单点示例）、3D 重建 3 条、控制规划 3 条、RoboTwin 3 条（各为核心入口/全局测试/单点测试）、通用"当前文件"1 条 | 见 §4 |
+| `tasks.json` | **任务**：18 条一键任务（五项目各有核心入口冒烟、全局测试、单点过滤测试；NeRF 另有全量训练/测试/渲染），`Terminal → Run Task` 调用 | 测试任务分组为 `test` |
 | `extensions.json` | 推荐扩展清单 | 打开仓库时自动提示 |
 
 **新增项目时的统一动作**：`settings.json` 的 `pytestArgs` / `extraPaths` / `PYTHONPATH`
@@ -37,10 +37,11 @@
   应显示 `llm_env (/home/dzxu/anaconda3/envs/llm_env/bin/python)` 且带 ✓。
 - **新开终端自动激活** llm_env（`python.terminal.activateEnvironment: true`）——
   终端提示符前出现 `(llm_env)` 即正常；若没有，手动 `conda activate llm_env`。
-- **两个项目的环境说明**：
+- **五个项目的环境说明**：
   - `projects/nerf`（torch）：**必须**用 llm_env；
-  - `projects/slam`（纯 numpy）：llm_env 与系统 python3（numpy≥1.26）均可，
-    统一建议用 llm_env（全套件已在两种环境验证通过）。
+  - `projects/slam`、`projects/3d_reconstruction`、`projects/control_planning`、
+    `projects/robotwin`（纯 numpy）：llm_env 与系统 python3（numpy≥1.26）均可，
+    统一建议用 llm_env（全套件已在两种环境验证通过，215 项测试）。
 - 验证：终端里 `python -c "import torch, numpy, pytest; print(torch.__version__, numpy.__version__, pytest.__version__)"`。
 
 ## 3. 运行测试（三种方式，单点 vs 全局）
@@ -76,6 +77,7 @@
 | 终端没有 `(llm_env)` 前缀 | `settings.json` 的自动激活被关了；手动 `conda activate llm_env`，或重启终端 |
 | 单点测试提示"没有匹配的测试" | 子串写错——输出会列出全部可用测试名，照着选 |
 | NeRF 调试配置报找不到 `data/lego` | lego 是 Blender 官方数据，需先下载（见 projects/nerf/DEBUG.md）；开箱即跑请用 tiny 冒烟配置（`data/demo_scene`，先跑 `scripts/make_demo_data.py`） |
+| 合并收集时 `import metrics` 拿到别的项目的模块 | 五个项目各有同名 `metrics.py`（CONSTRAINTS §4.7）：pytest 侧用 `--import-mode=importlib`（settings.json 已配），代码侧各新项目的测试/benchmark 用"按路径加载器"独立加载（见各文件注释）。**不要在新代码里裸 `import metrics`**，照抄 loader 或用包路径（如 nerf 的 `nerf.metrics`） |
 | `import` 项目内包标红线 | VS Code 窗口需重载（`Developer: Reload Window`）让 `extraPaths` 生效 |
 | 保存后代码被重排 | `black-formatter` 在保存时格式化（ruler=88）；属预期行为，不要手写超 88 列 |
 

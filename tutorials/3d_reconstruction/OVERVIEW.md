@@ -1,6 +1,6 @@
 # 3D 重建 — 主题总览（论文 / 教程 / 代码）
 
-> 论文库：[papers/3d_reconstruction/](../../papers/3d_reconstruction/README.md)（经典 7 + 前沿 5 + 源码包）｜ 教程：[10 章](README.md)（架构已定）｜ 代码：规划中
+> 论文库：[papers/3d_reconstruction/](../../papers/3d_reconstruction/README.md)（经典 7 + 前沿 5 + 源码包）｜ 教程：[10 章](README.md) ｜ 代码：[projects/3d_reconstruction/](../../projects/3d_reconstruction/README.md)（TSDF + 面提取已建立）
 
 ## 章节与论文对应
 
@@ -25,5 +25,10 @@
 
 ## 代码状态
 
-`projects/3d_reconstruction/` 尚未建立。规划：TSDF 融合 + Marching Cubes 的教学实现
-（纯 NumPy 可运行，衔接 projects/nerf 的数据生成脚本），以及 3DGS 最小可微光栅化器。
+`projects/3d_reconstruction/` **已建立**（纯 NumPy，39 项测试双环境全绿）：
+`scene.py`（SDF 基元 + 球追踪深度渲染，对应第 01 章 §1.1 与第 04 章数据来源）、
+`tsdf.py`（Curless & Levoy 1996 加权积分，第 04 章）、`marching.py`（Marching
+Tetrahedra 面提取，第 05 章）、`metrics.py`（Chamfer / 精度完成度 / F-score@τ，DTU
+口径）+ `demo.py` 一键管线（24 视角 → TSDF → 网格 → 评测，F@20mm≈0.96）。
+MVS/COLMAP/NeuS/3DGS 等需多视图匹配或 GPU 优化器的部分不做实现（保真度声明见其
+README）；3DGS 最小可微光栅化器列为延伸方向。

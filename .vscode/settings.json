@@ -4,20 +4,34 @@
   // 已含 torch 2.11.0+cu130 / numpy 2.2.6 / pytest 9.1.1 / pypdf；清单见根目录 environment.yml
   "python.defaultInterpreterPath": "/home/dzxu/anaconda3/envs/llm_env/bin/python",
   "python.terminal.activateEnvironment": true,
-  "python.analysis.extraPaths": ["${workspaceFolder}/projects/nerf", "${workspaceFolder}/projects/slam"],
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}/projects/nerf",
+    "${workspaceFolder}/projects/slam",
+    "${workspaceFolder}/projects/3d_reconstruction",
+    "${workspaceFolder}/projects/control_planning",
+    "${workspaceFolder}/projects/robotwin"
+  ],
   "python.analysis.typeCheckingMode": "basic",
 
   // ===== 测试 =====
-  // --import-mode=importlib：两个项目存在同名 test_metrics.py，
-  // 默认 import 模式合并收集会报 "import file mismatch"，importlib 模式可并存
+  // --import-mode=importlib：五个项目存在同名 test_metrics.py，
+  // 默认 import 模式合并收集会报 "import file mismatch"，importlib 模式可并存；
+  // 各项目 metrics.py 同名问题已由路径加载器（见各项目 tests / benchmark.py 注释）隔离
   "python.testing.pytestEnabled": true,
-  "python.testing.pytestArgs": ["--import-mode=importlib", "projects/nerf/tests", "projects/slam/tests"],
+  "python.testing.pytestArgs": [
+    "--import-mode=importlib",
+    "projects/nerf/tests",
+    "projects/slam/tests",
+    "projects/3d_reconstruction/tests",
+    "projects/control_planning/tests",
+    "projects/robotwin/tests"
+  ],
   "python.testing.cwd": "${workspaceFolder}",
 
   // ===== 终端 =====
   "terminal.integrated.defaultProfile.linux": "bash",
   "terminal.integrated.env.linux": {
-    "PYTHONPATH": "${workspaceFolder}/projects/nerf:${workspaceFolder}/projects/slam"
+    "PYTHONPATH": "${workspaceFolder}/projects/nerf:${workspaceFolder}/projects/slam:${workspaceFolder}/projects/3d_reconstruction:${workspaceFolder}/projects/control_planning:${workspaceFolder}/projects/robotwin"
   },
 
   // ===== 代码质量 =====

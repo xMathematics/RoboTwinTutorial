@@ -89,6 +89,93 @@
       },
       "group": "test",
       "problemMatcher": []
+    },
+    {
+      "label": "3D 重建: 核心入口（demo.py 冒烟）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} demo.py",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/3d_reconstruction"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "3D 重建: 全局测试（pytest 全套件 39 项）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest projects/3d_reconstruction/tests -v",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "3D 重建: 单点测试（当前文件 + 过滤）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} ${relativeFile} ${input:projTestFilter}",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/3d_reconstruction"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "control_planning: 核心入口（demo.py 冒烟）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} demo.py",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/control_planning"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "control_planning: 全局测试（pytest 全套件 46 项）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest projects/control_planning/tests -v",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "control_planning: 单点测试（当前文件 + 过滤）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} ${relativeFile} ${input:projTestFilter}",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/control_planning"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "RoboTwin: 核心入口（demo.py 冒烟）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} demo.py",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/robotwin"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "RoboTwin: 全局测试（pytest 全套件 35 项）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest projects/robotwin/tests -v",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "RoboTwin: 单点测试（当前文件 + 过滤）",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} ${relativeFile} ${input:projTestFilter}",
+      "options": {
+        "cwd": "${workspaceFolder}/projects/robotwin"
+      },
+      "group": "test",
+      "problemMatcher": []
     }
   ],
   "inputs": [
@@ -102,6 +189,12 @@
       "id": "nerfTestFilter",
       "type": "promptString",
       "description": "测试名子串（如 volume_render、ssim；留空 = 全部）",
+      "default": ""
+    },
+    {
+      "id": "projTestFilter",
+      "type": "promptString",
+      "description": "测试名子串（如 normals、riccati、dose；留空 = 全部）",
       "default": ""
     }
   ]

@@ -33,8 +33,11 @@ RoboTwinTutorial/
 │
 ├── projects/               ★ 代码项目（可运行参考实现）
 │   ├── README.md           项目索引与快速开始
-│   ├── nerf/               NeRF PyTorch 教学版（15/15 单元测试通过）
-│   └── slam/               SLAM 论文教学实现（core/fastslam/epipolar/bowloop/...，80 项测试）
+│   ├── nerf/               NeRF PyTorch 教学版（15 项测试）
+│   ├── slam/               SLAM 论文教学实现（core + 9 模块 + metrics，80 项测试）
+│   ├── 3d_reconstruction/  3D 重建教学实现（TSDF 融合 + 面提取 + 评测，39 项测试）
+│   ├── control_planning/   控制与规划教学实现（RRT*/iLQR/MPC/CBF/阻抗/PPO，46 项测试）
+│   └── robotwin/           RoboTwin 方法论迷你基准（域随机化 + 评测协议，35 项测试）
 │
 ├── scripts/                项目管理脚本（auto_commit.sh 自动提交）
 ├── .github/workflows/      GitHub Actions（每周一 UTC 09:00／北京 17:00 自动提交）

@@ -215,8 +215,10 @@ projects/<主题>/
   3. **健康值范围**——本项目各模块的实测参考值与异常信号；
   4. **如何运行**——评估命令示例与输出解读。
 - **本项目指标基线**：nerf = PSNR / SSIM（LPIPS 列为延伸）；slam = ATE RMSE
-  （Umeyama 对齐）、旋转误差、尺度比、深度/地图 RMSE；control_planning =
-  规划成功率 / 路径长度 / 轨迹代价（模块建立时补齐）。
+  （Umeyama 对齐）、旋转误差、尺度比、深度/地图 RMSE；3d_reconstruction =
+  Chamfer 距离、精度/完成度（DTU 口径）、F-score@τ；control_planning =
+  规划成功率 / 路径长度 / 轨迹代价；robotwin = 任务成功率、宏平均 + 最差任务、
+  seen-unseen 泛化差距。
 
 ### 4.8 VS Code 统一配置（硬性要求）
 

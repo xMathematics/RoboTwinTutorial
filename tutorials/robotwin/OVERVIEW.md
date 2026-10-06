@@ -1,6 +1,6 @@
 # RoboTwin — 主题总览（论文 / 教程 / 代码）
 
-> 论文库：[papers/robotwin/](../../papers/robotwin/README.md)（基准 2 篇 + 经典 3 篇 + 前沿 6 篇，共 11 篇）｜ 教程：[10 章](README.md) ｜ 论文精读：[11 篇](精读/README.md) ｜ 代码：官方开源（本地暂无教学实现）
+> 论文库：[papers/robotwin/](../../papers/robotwin/README.md)（基准 2 篇 + 经典 3 篇 + 前沿 6 篇，共 11 篇）｜ 教程：[10 章](README.md) ｜ 论文精读：[11 篇](精读/README.md) ｜ 代码：[方法论迷你基准](../../projects/robotwin/README.md)（本地）+ 官方完整实现
 
 ## 章节与论文对应
 
@@ -37,7 +37,10 @@
 
 ## 代码状态
 
-`projects/robotwin/` 暂未建立：RoboTwin 依赖 CoppeliaSim 仿真器、MLLM API 与较大规模模型，
-不适合像 [projects/nerf](../../projects/nerf/README.md)、[projects/slam](../../projects/slam/README.md)
-那样做纯 NumPy/PyTorch 教学实现。实操请直接使用
-[官方开源实现与文档](https://robotwin-platform.github.io/doc/)（教程第 7、8 章的命令即来自官方文档）。
+`projects/robotwin/` 已建立为**方法论迷你基准**（纯 NumPy，35 项测试双环境全绿）：
+把 RoboTwin 2.0 论文的两条方法论主线——**域随机化**（none/mild/strong 三档剂量 ×
+五维采样，对照其五维 DR）与**基准评测协议**（每任务成功率、宏平均 + 最差任务、
+seen/unseen 泛化差距）——做成 2D 双臂玩具世界（FK/IK + reach/push/pick_place 三任务
++ 标定型 vs 自标定型脚本策略对照），`demo.py` 约 2 秒复现教程 §4.2.3/§6.4 的
+"DR 剂量 vs 成功率"曲线。RoboTwin 本体（CoppeliaSim 仿真、MLLM 数据生成、VLA 策略
+训练）不在教学实现范围内，实操以官方开源与教程第 7、8 章为准。
