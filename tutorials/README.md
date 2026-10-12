@@ -9,6 +9,7 @@
 | [slam/](slam/) | 10 章 + 导航 + 主题总览 | [18 篇](slam/精读/README.md) | [README.md](slam/README.md) |
 | [3d_reconstruction/](3d_reconstruction/) | 10 章 + 导航 + 主题总览 | [13 篇](3d_reconstruction/精读/README.md) | [README.md](3d_reconstruction/README.md) |
 | [control_planning/](control_planning/) | 10 章 + 导航 + 主题总览 | [9 篇](control_planning/精读/README.md) | [README.md](control_planning/README.md) |
+| [probabilistic_robotics/](probabilistic_robotics/) | 17 篇（逐章精读《概率机器人》）+ 导航 + 主题总览 | ——（整本书即精读底本） | [README.md](probabilistic_robotics/README.md) |
 
 全库精读笔记共 **52 篇**（各主题 `精读/` 子目录，含关键公式推导与原文式号核对），
 总索引见各主题的 `精读/README.md`。
