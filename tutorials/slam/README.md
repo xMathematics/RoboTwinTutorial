@@ -2,6 +2,11 @@
 
 > **主题**：Simultaneous Localization and Mapping（同步定位与建图）
 > **状态**：10 章全部完成 ｜ **论文精读**：18 篇逐篇精读见 [精读/](精读/README.md) ｜ **主题总览**：[OVERVIEW.md](OVERVIEW.md) ｜ 主线教材：《视觉 SLAM 十四讲》（高翔）+ 概率机器人学（Thrun）
+> **book 逐讲教程**：《视觉 SLAM 十四讲》逐讲教程已完成（[十四讲/](十四讲/README.md)，14 讲正文，
+> 公式逐步推导，与大纲编号一致）｜ 大纲：[00_视觉slam十四讲教程大纲.md](00_视觉slam十四讲教程大纲.md)
+> **book 逐讲教程 2**：《自动驾驶与机器人中的SLAM技术》逐讲教程已完成
+> （[自动驾驶SLAM/](自动驾驶SLAM/README.md)，12 讲正文，ESKF/预积分/激光 SLAM/建图定位闭环）｜
+> 大纲：[00_自动驾驶SLAM技术教程大纲.md](00_自动驾驶SLAM技术教程大纲.md)
 
 本文件是 SLAM 教程的**架构规划**：先为每章定下问题场景锚点与推导产出清单，
 后续各章按 [CONSTRAINTS.md §3.4](../../CONSTRAINTS.md) 五步法

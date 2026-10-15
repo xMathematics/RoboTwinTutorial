@@ -12,7 +12,7 @@ projects/nerf/data/
 
 # --- 论文库（本地资料，不上传 GitHub）---
 papers/
-
+book/
 # --- 日志 ---
 *.log
 
